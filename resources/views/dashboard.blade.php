@@ -10,6 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="icon" href="{{ secure_asset('/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <title>ITS | Informasi Banjir</title>
 </head>
 
@@ -113,145 +114,114 @@
 
     <script src="{{ secure_asset('build/assets/app-Wo4miWF5.js') }}" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/datepicker.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        function initMap() {
+        const data = <?php echo json_encode($data); ?>;
+        const categories = <?php echo json_encode($categories); ?>;
+        const assetBase = "{{ asset('') }}";
 
-            const data = <?php echo json_encode($data); ?>;
-            const categories = <?php echo json_encode($categories); ?>;
+        const defaultCenter = data.length ?
+            [parseFloat(data[0].latitude), parseFloat(data[0].longitude)] :
+            [-7.2575, 112.7521];
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const pos = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                        };
+        const map = L.map("map", {
+            zoomControl: true,
+        }).setView(defaultCenter, 12);
 
-                        map.setCenter(pos);
-                    },
-                    () => {
-                        handleLocationError(true, map.getCenter());
-                    }
-                );
-            } else {
-                handleLocationError(false, map.getCenter());
-            }
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors",
+        }).addTo(map);
 
-            function handleLocationError(browserHasGeolocation, pos) {
-                const errorMessage = browserHasGeolocation ?
-                    'Error: The Geolocation service failed.' :
-                    'Error: Your browser doesn\'t support geolocation.';
-                console.error(errorMessage);
-            }
-
-            const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 12,
-                disableDefaultUI: false,
-                zoomControl: true,
-                mapTypeControl: false,
-                scaleControl: true,
-                streetViewControl: false,
-                fullscreenControl: true,
-                styles: [{
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{
-                            visibility: "off"
-                        }]
-                    },
-                    {
-                        featureType: "transit.station.bus",
-                        stylers: [{
-                            visibility: "off"
-                        }]
-                    },
-                    {
-                        featureType: "transit.station.rail",
-                        stylers: [{
-                            visibility: "off"
-                        }]
-                    }
-                ]
-            });
-
-            data.forEach((item) => {
-                let iconUrl;
-                if (item.tinggi >= categories[0].tinggi_minimal && item.tinggi < categories[0].tinggi_maksimal) {
-                    iconUrl = "{{ asset('storage/icons/icon_1.png') }}";
-                } else if (item.tinggi >= categories[1].tinggi_minimal && item.tinggi < categories[1]
-                    .tinggi_maksimal) {
-                    iconUrl = "{{ asset('storage/icons/icon_2.png') }}";
-                } else if (item.tinggi >= categories[2].tinggi_minimal && item.tinggi < categories[2]
-                    .tinggi_maksimal) {
-                    iconUrl = "{{ asset('storage/icons/icon_3.png') }}";
-                } else if (item.tinggi >= categories[3].tinggi_minimal && item.tinggi < categories[3]
-                    .tinggi_maksimal) {
-                    iconUrl = "{{ asset('storage/icons/icon_4.png') }}";
-                } else {
-                    iconUrl = "{{ asset('storage/icons/icon_5.png') }}";
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = [position.coords.latitude, position.coords.longitude];
+                    map.setView(pos, 12);
+                },
+                () => {
+                    handleLocationError(true);
                 }
-
-                const marker = new google.maps.Marker({
-                    position: {
-                        lat: parseFloat(item.latitude),
-                        lng: parseFloat(item.longitude),
-                    },
-                    map: map,
-                    // icon: {
-                    //     path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z M -5,-30 A 5,5 0 1,1 5,-30 A 5,5 0 1,1 -5,-30',
-                    //     fillColor: color,
-                    //     fillOpacity: 1,
-                    //     strokeColor: '#000',
-                    //     strokeWeight: 1,
-                    //     scale: 1
-                    // }
-                    icon: {
-                        url: iconUrl,
-                        scaledSize: new google.maps.Size(20, 28),
-                    }
-                });
-
-                var tempContentString = `
-                <div style="padding: 2px; display: flex; flex-direction: row; max-width: 800px;">
-                `
-
-                if (item.foto) {
-                    item.foto = 'storage/' + item.foto;
-                    tempContentString += `
-                        <img src="{{ asset('${item.foto}') }}" style="max-width: 150px; height: auto; border-radius: 6px; margin-right: 8px;">
-                    `
-                }
-
-                const contentString = tempContentString + `
-                        <div style="display: flex; flex-direction: column; justify-content: center;">
-                            <p style="margin: 0; color: #4d4d4d; font-size: 16px; font-weight: 400; padding: 12px 0;">Ketinggian banjir : <span style="color : #0FB92A;">${item.tinggi}</span></p>
-                            <p style="margin: 0; color: #4d4d4d; font-size: 16px; font-weight: 400;"><span style="font-style: italic;  font-weight: 300;">Dicatat Oleh</span> : ${item.user.name}</p>
-                        </div>
-                </div>
-                `;
-
-                const infowindow = new google.maps.InfoWindow({
-                    content: contentString
-                });
-
-                marker.addListener('click', function() {
-                    infowindow.open(map, marker);
-                });
-
-                marker.addListener('mouseover', function() {
-                    infowindow.open(map, marker);
-                });
-
-                marker.addListener('mouseout', function() {
-                    infowindow.close()
-                });
-            });
+            );
+        } else {
+            handleLocationError(false);
         }
+
+        function handleLocationError(browserHasGeolocation) {
+            const errorMessage = browserHasGeolocation ?
+                "Error: The Geolocation service failed." :
+                "Error: Your browser doesn't support geolocation.";
+            console.error(errorMessage);
+        }
+
+        function resolveIconUrl(item) {
+            if (!categories.length) {
+                return "{{ asset('storage/icons/icon_1.png') }}";
+            }
+
+            if (item.tinggi >= categories[0].tinggi_minimal && item.tinggi < categories[0].tinggi_maksimal) {
+                return "{{ asset('storage/icons/icon_1.png') }}";
+            }
+            if (item.tinggi >= categories[1].tinggi_minimal && item.tinggi < categories[1].tinggi_maksimal) {
+                return "{{ asset('storage/icons/icon_2.png') }}";
+            }
+            if (item.tinggi >= categories[2].tinggi_minimal && item.tinggi < categories[2].tinggi_maksimal) {
+                return "{{ asset('storage/icons/icon_3.png') }}";
+            }
+            if (item.tinggi >= categories[3].tinggi_minimal && item.tinggi < categories[3].tinggi_maksimal) {
+                return "{{ asset('storage/icons/icon_4.png') }}";
+            }
+
+            return "{{ asset('storage/icons/icon_5.png') }}";
+        }
+
+        function buildPopupContent(item) {
+            let content =
+                "<div style=\"padding: 2px; display: flex; flex-direction: row; max-width: 800px;\">";
+
+            if (item.foto) {
+                const photoUrl = assetBase + "storage/" + item.foto;
+                content +=
+                    `<img src="${photoUrl}" style="max-width: 150px; height: auto; border-radius: 6px; margin-right: 8px;">`;
+            }
+
+            content +=
+                `<div style="display: flex; flex-direction: column; justify-content: center;">
+                    <p style="margin: 0; color: #4d4d4d; font-size: 16px; font-weight: 400; padding: 12px 0;">
+                        Ketinggian banjir : <span style="color : #0FB92A;">${item.tinggi}</span>
+                    </p>
+                    <p style="margin: 0; color: #4d4d4d; font-size: 16px; font-weight: 400;">
+                        <span style="font-style: italic; font-weight: 300;">Dicatat Oleh</span> : ${item.user.name}
+                    </p>
+                </div>
+            </div>`;
+
+            return content;
+        }
+
+        data.forEach((item) => {
+            const iconUrl = resolveIconUrl(item);
+            const marker = L.marker([
+                parseFloat(item.latitude),
+                parseFloat(item.longitude),
+            ], {
+                icon: L.icon({
+                    iconUrl,
+                    iconSize: [20, 28],
+                    iconAnchor: [10, 28],
+                    popupAnchor: [0, -28],
+                }),
+            }).addTo(map);
+
+            const popupContent = buildPopupContent(item);
+            marker.bindPopup(popupContent);
+
+            marker.on("click", () => marker.openPopup());
+            marker.on("mouseover", () => marker.openPopup());
+            marker.on("mouseout", () => marker.closePopup());
+        });
     </script>
-    <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD3j--iDhYGf5VEqBQBTSF46W1nBDKqgfk&callback=initMap&loading=async"
-        async defer></script>
 
 </body>
 

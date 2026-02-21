@@ -2,6 +2,7 @@
 
 @section('container')
     @include('sweetalert::alert')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <div class="hNav bg-[#F8FCFF] flex flex-col justify-center items-center py-12">
         <div class=" text-center my-4">
             <h1 class="font-bold text-3xl">Entri Data Survei</h1>
@@ -61,227 +62,112 @@
             document.getElementById('hiddenDatePicker').click();
         });
     </script>
-    <script async
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD3j--iDhYGf5VEqBQBTSF46W1nBDKqgfk&libraries=places&callback=initMap&loading=async">
-    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/nominatim-js@3.1.0/build/nominatim.min.js"></script>
 
     <script>
         let map;
         let marker;
-        let autocomplete;
+        let defaultLat = -7.2575;
+        let defaultLng = 112.7521;
 
         function initMap() {
+            map = L.map('map').setView([defaultLat, defaultLng], 13);
 
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 13,
-                disableDefaultUI: false,
-                zoomControl: true,
-                mapTypeControl: false,
-                scaleControl: true,
-                streetViewControl: false,
-                fullscreenControl: true,
-                styles: [{
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{
-                            visibility: "off"
-                        }]
-                    },
-                    {
-                        featureType: "transit.station.bus",
-                        stylers: [{
-                            visibility: "off"
-                        }]
-                    },
-                    {
-                        featureType: "transit.station.rail",
-                        stylers: [{
-                            visibility: "off"
-                        }]
-                    }
-                ]
-            });
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        const pos = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                        };
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
 
-                        map.setCenter(pos);
+                        map.setView([lat, lng], 13);
 
-                        marker = new google.maps.Marker({
-                            position: pos,
-                            map: map,
-                            title: "Your Location",
-                        });
+                        if (marker) {
+                            marker.setLatLng([lat, lng]);
+                        } else {
+                            marker = L.marker([lat, lng]).addTo(map)
+                                .bindPopup('Your Location');
+                        }
 
-                        document.getElementById("latitude").value = pos.lat;
-                        document.getElementById("longitude").value = pos.lng;
-                        document.getElementById("coordinates").innerText =
-                            `Coordinates:\nLatitude: ${pos.lat}\nLongitude: ${pos.lng}`;
+                        document.getElementById('latitude').value = lat;
+                        document.getElementById('longitude').value = lng;
                     },
                     () => {
-                        handleLocationError(true, map.getCenter());
+                        handleLocationError(true);
                     }
                 );
             } else {
-                handleLocationError(false, map.getCenter());
+                handleLocationError(false);
             }
 
-            function handleLocationError(browserHasGeolocation, pos) {
+            function handleLocationError(browserHasGeolocation) {
                 const errorMessage = browserHasGeolocation ?
                     'Error: The Geolocation service failed.' :
                     'Error: Your browser doesn\'t support geolocation.';
                 console.error(errorMessage);
-
-                document.getElementById("coordinates").innerText =
-                    `Default Coordinates:\nLatitude: ${pos.lat()}\nLongitude: ${pos.lng()}`;
             }
 
-            autocomplete = new google.maps.places.Autocomplete(
-                document.getElementById("input-address"), {
-                    types: ["geocode"]
+            // Handle address search
+            const addressInput = document.getElementById('input-address');
+            addressInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    searchLocation();
                 }
-            );
-
-            autocomplete.bindTo("bounds", map);
-            autocomplete.addListener("place_changed", onPlaceChanged);
-
-            function onPlaceChanged() {
-                const place = autocomplete.getPlace();
-                if (!place.geometry) {
-                    return;
-                }
-
-                if (place.geometry.viewport) {
-                    map.fitBounds(place.geometry.viewport);
-                } else {
-                    map.setCenter(place.geometry.location);
-                    map.setZoom(17);
-                }
-
-                if (marker) {
-                    marker.setPosition(place.geometry.location);
-                } else {
-                    marker = new google.maps.Marker({
-                        position: place.geometry.location,
-                        map: map,
-                        title: "Selected Location",
-                    });
-                }
-
-                document.getElementById("latitude").value = place.geometry.location.lat();
-                document.getElementById("longitude").value = place.geometry.location.lng();
-
-                document.getElementById("coordinates").innerText =
-                    `Coordinates:\nLatitude: ${place.geometry.location.lat()}\nLongitude: ${place.geometry.location.lng()}`;
-            }
-
-            map.addListener("click", (mapsMouseEvent) => {
-                const clickedLatLng = {
-                    lat: mapsMouseEvent.latLng.lat(),
-                    lng: mapsMouseEvent.latLng.lng(),
-                };
-
-                marker.setPosition(clickedLatLng);
-                document.getElementById("latitude").value = clickedLatLng.lat;
-                document.getElementById("longitude").value = clickedLatLng.lng;
-                document.getElementById("coordinates").innerText =
-                    `coordinates:\nLatitude: ${clickedLatLng.lat}\nLongitude: ${clickedLatLng.lng}`;
-            });
-        }
-    </script>
-    <script>
-        let map;
-        let marker;
-        let autocomplete;
-
-        function initMap() {
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 4,
             });
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const pos = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                        };
+            function searchLocation() {
+                const address = addressInput.value;
+                if (!address) return;
 
-                        map.setCenter(pos);
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            const place = data[0];
+                            const lat = parseFloat(place.lat);
+                            const lng = parseFloat(place.lon);
 
-                        marker = new google.maps.Marker({
-                            position: pos,
-                            map: map,
-                            title: "Your Location",
-                        });
+                            map.setView([lat, lng], 17);
 
-                        document.getElementById("latitude").value = pos.lat;
-                        document.getElementById("longitude").value = pos.lng;
-                        document.getElementById("coordinates").innerText =
-                            `Coordinates:\nLatitude: ${pos.lat}\nLongitude: ${pos.lng}`;
-                    },
-                    () => {
-                        handleLocationError(true, map.getCenter());
-                    }
-                );
-            } else {
-                handleLocationError(false, map.getCenter());
+                            if (marker) {
+                                marker.setLatLng([lat, lng]);
+                            } else {
+                                marker = L.marker([lat, lng]).addTo(map)
+                                    .bindPopup('Selected Location');
+                            }
+
+                            document.getElementById('latitude').value = lat;
+                            document.getElementById('longitude').value = lng;
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
             }
 
-            function handleLocationError(browserHasGeolocation, pos) {
-                const errorMessage = browserHasGeolocation ?
-                    'Error: The Geolocation service failed.' :
-                    'Error: Your browser doesn\'t support geolocation.';
-                console.error(errorMessage);
-
-                document.getElementById("coordinates").innerText =
-                    `Default Coordinates:\nLatitude: ${pos.lat()}\nLongitude: ${pos.lng()}`;
-            }
-
-            autocomplete = new google.maps.places.Autocomplete(
-                document.getElementById("input-address"), {
-                    types: ["geocode"]
-                }
-            );
-
-            autocomplete.bindTo("bounds", map);
-            autocomplete.addListener("place_changed", onPlaceChanged);
-
-            function onPlaceChanged() {
-                const place = autocomplete.getPlace();
-                if (!place.geometry) {
-                    return;
-                }
-
-                if (place.geometry.viewport) {
-                    map.fitBounds(place.geometry.viewport);
-                } else {
-                    map.setCenter(place.geometry.location);
-                    map.setZoom(17);
-                }
+            // Handle map clicks
+            map.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
 
                 if (marker) {
-                    marker.setPosition(place.geometry.location);
+                    marker.setLatLng([lat, lng]);
                 } else {
-                    marker = new google.maps.Marker({
-                        position: place.geometry.location,
-                        map: map,
-                        title: "Selected Location",
-                    });
+                    marker = L.marker([lat, lng]).addTo(map)
+                        .bindPopup('Selected Location');
                 }
 
-                document.getElementById("latitude").value = place.geometry.location.lat();
-                document.getElementById("longitude").value = place.geometry.location.lng();
-
-                document.getElementById("coordinates").innerText =
-                    `Coordinates:\nLatitude: ${place.geometry.location.lat()}\nLongitude: ${place.geometry.location.lng()}`;
-            }
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lng;
+            });
         }
+
+        // Initialize map on page load
+        document.addEventListener('DOMContentLoaded', initMap);
     </script>
     <script>
         function previewImage(event) {
