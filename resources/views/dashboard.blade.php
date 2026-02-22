@@ -174,11 +174,18 @@
             return "{{ asset('storage/icons/icon_5.png') }}";
         }
 
+        function isValidPhotoPath(path) {
+            return typeof path === 'string' &&
+                /^[a-zA-Z0-9_\-\/\.]+$/.test(path) &&
+                !/\.\./.test(path) &&
+                !/^\//.test(path);
+        }
+
         function buildPopupContent(item) {
             let content =
                 "<div style=\"padding: 2px; display: flex; flex-direction: row; max-width: 800px;\">";
 
-            if (item.foto) {
+            if (item.foto && isValidPhotoPath(item.foto)) {
                 const photoUrl = assetBase + "storage/" + item.foto;
                 content +=
                     `<img src="${photoUrl}" style="max-width: 150px; height: auto; border-radius: 6px; margin-right: 8px;">`;
