@@ -197,11 +197,42 @@
                 }
             });
 
-            function searchLocation() {
-                const address = addressInput.value;
-                if (!address) return;
+            function isValidAddress(address) {
+                // Basic validation: non-empty, reasonable length, and no clearly dangerous characters
+                if (typeof address !== 'string') {
+                    return false;
+                }
 
-                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address))
+                const trimmed = address.trim();
+                if (trimmed.length === 0 || trimmed.length > 200) {
+                    return false;
+                }
+
+                // Disallow characters that are unlikely in a normal address and may be used for injection
+                const invalidPattern = /[<>\\{}]/;
+                if (invalidPattern.test(trimmed)) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            function searchLocation() {
+                const rawAddress = addressInput.value;
+                const address = typeof rawAddress === 'string' ? rawAddress.trim() : '';
+
+                if (!address) {
+                    return;
+                }
+
+                if (!isValidAddress(address)) {
+                    console.warn('Invalid address input rejected.');
+                    return;
+                }
+
+                const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address);
+
+                fetch(url)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Geocoding request failed with status ' + response.status);
