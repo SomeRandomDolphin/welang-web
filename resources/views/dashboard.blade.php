@@ -110,7 +110,6 @@
 
     </div>
 
-    <script src="{{ secure_asset('build/assets/app-Wo4miWF5.js') }}" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/datepicker.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -154,43 +153,64 @@
         }
 
         function resolveIconUrl(item) {
+            const iconBase = assetBase + 'storage/icons/';
+
             if (!categories.length) {
-                return "{{ asset('storage/icons/icon_1.png') }}";
+                return iconBase + 'icon_1.png';
             }
 
             if (item.tinggi >= categories[0].tinggi_minimal && item.tinggi < categories[0].tinggi_maksimal) {
-                return "{{ asset('storage/icons/icon_1.png') }}";
+                return iconBase + 'icon_1.png';
             }
             if (item.tinggi >= categories[1].tinggi_minimal && item.tinggi < categories[1].tinggi_maksimal) {
-                return "{{ asset('storage/icons/icon_2.png') }}";
+                return iconBase + 'icon_2.png';
             }
             if (item.tinggi >= categories[2].tinggi_minimal && item.tinggi < categories[2].tinggi_maksimal) {
-                return "{{ asset('storage/icons/icon_3.png') }}";
+                return iconBase + 'icon_3.png';
             }
             if (item.tinggi >= categories[3].tinggi_minimal && item.tinggi < categories[3].tinggi_maksimal) {
-                return "{{ asset('storage/icons/icon_4.png') }}";
+                return iconBase + 'icon_4.png';
             }
 
-            return "{{ asset('storage/icons/icon_5.png') }}";
+            return iconBase + 'icon_5.png';
+        }
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function isSafePhotoPath(path) {
+            return typeof path === 'string' &&
+                path.length > 0 &&
+                !path.includes('..') &&
+                !path.includes('%') &&
+                !path.startsWith('/') &&
+                !/^[a-zA-Z]+:/.test(path);
         }
 
         function buildPopupContent(item) {
             let content =
                 "<div style=\"padding: 2px; display: flex; flex-direction: row; max-width: 800px;\">";
 
-            if (item.foto) {
+            if (item.foto && isSafePhotoPath(item.foto)) {
                 const photoUrl = assetBase + "storage/" + item.foto;
                 content +=
-                    `<img src="${photoUrl}" style="max-width: 150px; height: auto; border-radius: 6px; margin-right: 8px;">`;
+                    `<img src="${escapeHtml(photoUrl)}" style="max-width: 150px; height: auto; border-radius: 6px; margin-right: 8px;">`;
             }
 
             content +=
                 `<div style="display: flex; flex-direction: column; justify-content: center;">
                     <p style="margin: 0; color: #4d4d4d; font-size: 16px; font-weight: 400; padding: 12px 0;">
-                        Ketinggian banjir : <span style="color : #0FB92A;">${item.tinggi}</span>
+                        Ketinggian banjir : <span style="color : #0FB92A;">${escapeHtml(item.tinggi)}</span>
                     </p>
                     <p style="margin: 0; color: #4d4d4d; font-size: 16px; font-weight: 400;">
-                        <span style="font-style: italic; font-weight: 300;">Dicatat Oleh</span> : ${item.user.name}
+                        <span style="font-style: italic; font-weight: 300;">Dicatat Oleh</span> : ${escapeHtml(item.user.name)}
                     </p>
                 </div>
             </div>`;
