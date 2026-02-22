@@ -202,27 +202,38 @@
                 if (!address) return;
 
                 fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address))
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.length > 0) {
-                            const place = data[0];
-                            const lat = parseFloat(place.lat);
-                            const lng = parseFloat(place.lon);
-
-                            map.setView([lat, lng], 17);
-
-                            if (marker) {
-                                marker.setLatLng([lat, lng]);
-                            } else {
-                                marker = L.marker([lat, lng]).addTo(map)
-                                    .bindPopup('Selected Location');
-                            }
-
-                            document.getElementById('latitude').value = lat;
-                            document.getElementById('longitude').value = lng;
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Geocoding request failed with status ' + response.status);
                         }
+                        return response.json();
                     })
-                    .catch(error => console.error('Error:', error));
+                    .then(data => {
+                        if (!Array.isArray(data) || data.length === 0) {
+                            alert('Alamat tidak ditemukan. Silakan periksa kembali alamat yang dimasukkan.');
+                            return;
+                        }
+
+                        const place = data[0];
+                        const lat = parseFloat(place.lat);
+                        const lng = parseFloat(place.lon);
+
+                        map.setView([lat, lng], 17);
+
+                        if (marker) {
+                            marker.setLatLng([lat, lng]);
+                        } else {
+                            marker = L.marker([lat, lng]).addTo(map)
+                                .bindPopup('Selected Location');
+                        }
+
+                        document.getElementById('latitude').value = lat;
+                        document.getElementById('longitude').value = lng;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat mencari alamat. Periksa koneksi internet Anda dan coba lagi.');
+                    });
             }
 
             // Handle map clicks
