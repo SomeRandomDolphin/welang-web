@@ -118,6 +118,7 @@
         const data = <?php echo json_encode($data); ?>;
         const categories = <?php echo json_encode($categories); ?>;
         const assetBase = "{{ asset('') }}";
+        const iconUrls = Array.from({length: categories.length + 1}, (_, i) => assetBase + "storage/icons/icon_" + (i + 1) + ".png");
 
         const defaultCenter = data.length ?
             [parseFloat(data[0].latitude), parseFloat(data[0].longitude)] :
@@ -155,23 +156,16 @@
 
         function resolveIconUrl(item) {
             if (!categories.length) {
-                return "{{ asset('storage/icons/icon_1.png') }}";
+                return iconUrls[0];
             }
 
-            if (item.tinggi >= categories[0].tinggi_minimal && item.tinggi < categories[0].tinggi_maksimal) {
-                return "{{ asset('storage/icons/icon_1.png') }}";
-            }
-            if (item.tinggi >= categories[1].tinggi_minimal && item.tinggi < categories[1].tinggi_maksimal) {
-                return "{{ asset('storage/icons/icon_2.png') }}";
-            }
-            if (item.tinggi >= categories[2].tinggi_minimal && item.tinggi < categories[2].tinggi_maksimal) {
-                return "{{ asset('storage/icons/icon_3.png') }}";
-            }
-            if (item.tinggi >= categories[3].tinggi_minimal && item.tinggi < categories[3].tinggi_maksimal) {
-                return "{{ asset('storage/icons/icon_4.png') }}";
+            for (let i = 0; i < categories.length; i++) {
+                if (item.tinggi >= categories[i].tinggi_minimal && item.tinggi < categories[i].tinggi_maksimal) {
+                    return iconUrls[i];
+                }
             }
 
-            return "{{ asset('storage/icons/icon_5.png') }}";
+            return iconUrls[iconUrls.length - 1];
         }
 
         function buildPopupContent(item) {
