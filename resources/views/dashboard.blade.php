@@ -2,9 +2,7 @@
 <html lang="en">
 
 <head>
-    {{-- @vite('resources/css/app.css', 'resources/js/app.js') --}}
-    <link href="{{ secure_asset('build/assets/app-GJGlotqp.css ') }}" rel="stylesheet">
-
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

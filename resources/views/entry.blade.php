@@ -33,7 +33,7 @@
 
             <div class="flex flex-col items-start w-full my-2">
                 <label for="lokasi" class="block mb-2 pFormActive">Lokasi</label>
-                <div class="relative w-full">
+                <div class="relative w-full mb-2">
                     <div class="absolute inset-y-0 flex items-center right-0 pointer-events-none">
                         <svg class="w-4 h-fit mx-5 text-gray-500 dark:text-gray-400" aria-hidden="true"
                             xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 20">
@@ -45,6 +45,15 @@
                         class="border border-gray-200 pFormActive font-light rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full"
                         placeholder="Masukkan Lokasi Kejadian">
                 </div>
+                <button type="button" id="btn-get-location" 
+                    class="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span id="location-btn-text">Gunakan Lokasi Saya</span>
+                </button>
+                <p id="location-status" class="text-sm mt-1 text-gray-600"></p>
             </div>
 
             <div class="flex flex-col justify-center w-full h-[50vh] mt-2 border border-gray-200 rounded-lg" id="map">
@@ -79,37 +88,104 @@
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
-            if (navigator.geolocation) {
+            // Check if site is using HTTPS (required for mobile geolocation)
+            const isSecure = window.location.protocol === 'https:';
+            const statusEl = document.getElementById('location-status');
+            
+            if (!isSecure) {
+                statusEl.textContent = '⚠️ Peringatan: Geolokasi di perangkat mobile memerlukan HTTPS';
+                statusEl.className = 'text-sm mt-1 text-orange-600';
+            }
+
+            // Add button click handler for manual location request
+            document.getElementById('btn-get-location').addEventListener('click', function() {
+                getUserLocation();
+            });
+
+            function getUserLocation() {
+                const btnText = document.getElementById('location-btn-text');
+                const statusEl = document.getElementById('location-status');
+                
+                if (!navigator.geolocation) {
+                    handleLocationError(false);
+                    return;
+                }
+
+                // Show loading state
+                btnText.textContent = 'Mendapatkan lokasi...';
+                statusEl.textContent = 'Mohon izinkan akses lokasi saat diminta';
+                statusEl.className = 'text-sm mt-1 text-blue-600';
+
+                // Geolocation options optimized for mobile
+                const options = {
+                    enableHighAccuracy: true, // Use GPS on mobile
+                    timeout: 10000, // 10 second timeout
+                    maximumAge: 0 // Don't use cached position
+                };
+
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
 
-                        map.setView([lat, lng], 13);
+                        map.setView([lat, lng], 17);
 
                         if (marker) {
                             marker.setLatLng([lat, lng]);
                         } else {
                             marker = L.marker([lat, lng]).addTo(map)
-                                .bindPopup('Your Location');
+                                .bindPopup('Lokasi Anda');
                         }
 
                         document.getElementById('latitude').value = lat;
                         document.getElementById('longitude').value = lng;
+
+                        // Success feedback
+                        btnText.textContent = 'Lokasi Berhasil Diperoleh ✓';
+                        statusEl.textContent = `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        statusEl.className = 'text-sm mt-1 text-green-600';
+                        
+                        setTimeout(() => {
+                            btnText.textContent = 'Perbarui Lokasi Saya';
+                        }, 2000);
                     },
-                    () => {
-                        handleLocationError(true);
-                    }
+                    (error) => {
+                        handleLocationError(true, error);
+                    },
+                    options
                 );
-            } else {
-                handleLocationError(false);
             }
 
-            function handleLocationError(browserHasGeolocation) {
-                const errorMessage = browserHasGeolocation ?
-                    'Error: The Geolocation service failed.' :
-                    'Error: Your browser doesn\'t support geolocation.';
-                console.error(errorMessage);
+            function handleLocationError(browserHasGeolocation, error) {
+                const btnText = document.getElementById('location-btn-text');
+                const statusEl = document.getElementById('location-status');
+                
+                btnText.textContent = 'Coba Lagi';
+                
+                let errorMessage = '';
+                if (!browserHasGeolocation) {
+                    errorMessage = 'Browser Anda tidak mendukung geolokasi.';
+                } else if (error) {
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Akses lokasi ditolak. Silakan izinkan di pengaturan browser.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Informasi lokasi tidak tersedia.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Waktu permintaan lokasi habis. Coba lagi.';
+                            break;
+                        default:
+                            errorMessage = 'Terjadi kesalahan saat mendapatkan lokasi.';
+                    }
+                } else {
+                    errorMessage = 'Gagal mendapatkan lokasi.';
+                }
+                
+                statusEl.textContent = '❌ ' + errorMessage;
+                statusEl.className = 'text-sm mt-1 text-red-600';
+                console.error(errorMessage, error);
             }
 
             // Handle address search
