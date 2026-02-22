@@ -254,7 +254,13 @@
         }
 
         // Initialize map on page load
-        document.addEventListener('DOMContentLoaded', initMap);
+        (function() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initMap);
+            } else {
+                initMap();
+            }
+        })();
     </script>
     <script>
         function previewImage(event) {
