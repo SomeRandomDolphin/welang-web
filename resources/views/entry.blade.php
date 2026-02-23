@@ -2,6 +2,7 @@
 
 @section('container')
     @include('sweetalert::alert')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <div class="hNav bg-[#F8FCFF] flex flex-col justify-center items-center py-12">
         <div class=" text-center my-4">
             <h1 class="font-bold text-3xl">Entri Data Survei</h1>
@@ -32,7 +33,7 @@
 
             <div class="flex flex-col items-start w-full my-2">
                 <label for="lokasi" class="block mb-2 pFormActive">Lokasi</label>
-                <div class="relative w-full">
+                <div class="relative w-full mb-2">
                     <div class="absolute inset-y-0 flex items-center right-0 pointer-events-none">
                         <svg class="w-4 h-fit mx-5 text-gray-500 dark:text-gray-400" aria-hidden="true"
                             xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 20">
@@ -44,6 +45,15 @@
                         class="border border-gray-200 pFormActive font-light rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full"
                         placeholder="Masukkan Lokasi Kejadian">
                 </div>
+                <button type="button" id="btn-get-location" 
+                    class="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span id="location-btn-text">Gunakan Lokasi Saya</span>
+                </button>
+                <p id="location-status" class="text-sm mt-1 text-gray-600"></p>
             </div>
 
             <div class="flex flex-col justify-center w-full h-[50vh] mt-2 border border-gray-200 rounded-lg" id="map">
@@ -61,227 +71,227 @@
             document.getElementById('hiddenDatePicker').click();
         });
     </script>
-    <script async
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD3j--iDhYGf5VEqBQBTSF46W1nBDKqgfk&libraries=places&callback=initMap&loading=async">
-    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/nominatim-js@3.1.0/build/nominatim.min.js"></script>
 
     <script>
         let map;
         let marker;
-        let autocomplete;
+        let defaultLat = -7.2575;
+        let defaultLng = 112.7521;
 
         function initMap() {
+            map = L.map('map').setView([defaultLat, defaultLng], 13);
 
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 13,
-                disableDefaultUI: false,
-                zoomControl: true,
-                mapTypeControl: false,
-                scaleControl: true,
-                streetViewControl: false,
-                fullscreenControl: true,
-                styles: [{
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{
-                            visibility: "off"
-                        }]
-                    },
-                    {
-                        featureType: "transit.station.bus",
-                        stylers: [{
-                            visibility: "off"
-                        }]
-                    },
-                    {
-                        featureType: "transit.station.rail",
-                        stylers: [{
-                            visibility: "off"
-                        }]
-                    }
-                ]
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Check if site is using HTTPS (required for mobile geolocation)
+            const isSecure = window.location.protocol === 'https:';
+            const statusEl = document.getElementById('location-status');
+            
+            if (!isSecure) {
+                statusEl.textContent = '⚠️ Peringatan: Geolokasi di perangkat mobile memerlukan HTTPS';
+                statusEl.className = 'text-sm mt-1 text-orange-600';
+            }
+
+            // Add button click handler for manual location request
+            document.getElementById('btn-get-location').addEventListener('click', function() {
+                getUserLocation();
             });
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const pos = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                        };
-
-                        map.setCenter(pos);
-
-                        marker = new google.maps.Marker({
-                            position: pos,
-                            map: map,
-                            title: "Your Location",
-                        });
-
-                        document.getElementById("latitude").value = pos.lat;
-                        document.getElementById("longitude").value = pos.lng;
-                        document.getElementById("coordinates").innerText =
-                            `Coordinates:\nLatitude: ${pos.lat}\nLongitude: ${pos.lng}`;
-                    },
-                    () => {
-                        handleLocationError(true, map.getCenter());
-                    }
-                );
-            } else {
-                handleLocationError(false, map.getCenter());
-            }
-
-            function handleLocationError(browserHasGeolocation, pos) {
-                const errorMessage = browserHasGeolocation ?
-                    'Error: The Geolocation service failed.' :
-                    'Error: Your browser doesn\'t support geolocation.';
-                console.error(errorMessage);
-
-                document.getElementById("coordinates").innerText =
-                    `Default Coordinates:\nLatitude: ${pos.lat()}\nLongitude: ${pos.lng()}`;
-            }
-
-            autocomplete = new google.maps.places.Autocomplete(
-                document.getElementById("input-address"), {
-                    types: ["geocode"]
-                }
-            );
-
-            autocomplete.bindTo("bounds", map);
-            autocomplete.addListener("place_changed", onPlaceChanged);
-
-            function onPlaceChanged() {
-                const place = autocomplete.getPlace();
-                if (!place.geometry) {
+            function getUserLocation() {
+                const btnText = document.getElementById('location-btn-text');
+                const statusEl = document.getElementById('location-status');
+                
+                if (!navigator.geolocation) {
+                    handleLocationError(false);
                     return;
                 }
 
-                if (place.geometry.viewport) {
-                    map.fitBounds(place.geometry.viewport);
-                } else {
-                    map.setCenter(place.geometry.location);
-                    map.setZoom(17);
-                }
+                // Show loading state
+                btnText.textContent = 'Mendapatkan lokasi...';
+                statusEl.textContent = 'Mohon izinkan akses lokasi saat diminta';
+                statusEl.className = 'text-sm mt-1 text-blue-600';
 
-                if (marker) {
-                    marker.setPosition(place.geometry.location);
-                } else {
-                    marker = new google.maps.Marker({
-                        position: place.geometry.location,
-                        map: map,
-                        title: "Selected Location",
-                    });
-                }
-
-                document.getElementById("latitude").value = place.geometry.location.lat();
-                document.getElementById("longitude").value = place.geometry.location.lng();
-
-                document.getElementById("coordinates").innerText =
-                    `Coordinates:\nLatitude: ${place.geometry.location.lat()}\nLongitude: ${place.geometry.location.lng()}`;
-            }
-
-            map.addListener("click", (mapsMouseEvent) => {
-                const clickedLatLng = {
-                    lat: mapsMouseEvent.latLng.lat(),
-                    lng: mapsMouseEvent.latLng.lng(),
+                // Geolocation options optimized for mobile
+                const options = {
+                    enableHighAccuracy: true, // Use GPS on mobile
+                    timeout: 10000, // 10 second timeout
+                    maximumAge: 0 // Don't use cached position
                 };
 
-                marker.setPosition(clickedLatLng);
-                document.getElementById("latitude").value = clickedLatLng.lat;
-                document.getElementById("longitude").value = clickedLatLng.lng;
-                document.getElementById("coordinates").innerText =
-                    `coordinates:\nLatitude: ${clickedLatLng.lat}\nLongitude: ${clickedLatLng.lng}`;
-            });
-        }
-    </script>
-    <script>
-        let map;
-        let marker;
-        let autocomplete;
-
-        function initMap() {
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 4,
-            });
-
-            if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        const pos = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                        };
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
 
-                        map.setCenter(pos);
+                        map.setView([lat, lng], 17);
 
-                        marker = new google.maps.Marker({
-                            position: pos,
-                            map: map,
-                            title: "Your Location",
-                        });
+                        if (marker) {
+                            marker.setLatLng([lat, lng]);
+                        } else {
+                            marker = L.marker([lat, lng]).addTo(map)
+                                .bindPopup('Lokasi Anda');
+                        }
 
-                        document.getElementById("latitude").value = pos.lat;
-                        document.getElementById("longitude").value = pos.lng;
-                        document.getElementById("coordinates").innerText =
-                            `Coordinates:\nLatitude: ${pos.lat}\nLongitude: ${pos.lng}`;
+                        document.getElementById('latitude').value = lat;
+                        document.getElementById('longitude').value = lng;
+
+                        // Success feedback
+                        btnText.textContent = 'Lokasi Berhasil Diperoleh ✓';
+                        statusEl.textContent = `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        statusEl.className = 'text-sm mt-1 text-green-600';
+                        
+                        setTimeout(() => {
+                            btnText.textContent = 'Perbarui Lokasi Saya';
+                        }, 2000);
                     },
-                    () => {
-                        handleLocationError(true, map.getCenter());
-                    }
+                    (error) => {
+                        handleLocationError(true, error);
+                    },
+                    options
                 );
-            } else {
-                handleLocationError(false, map.getCenter());
             }
 
-            function handleLocationError(browserHasGeolocation, pos) {
-                const errorMessage = browserHasGeolocation ?
-                    'Error: The Geolocation service failed.' :
-                    'Error: Your browser doesn\'t support geolocation.';
-                console.error(errorMessage);
-
-                document.getElementById("coordinates").innerText =
-                    `Default Coordinates:\nLatitude: ${pos.lat()}\nLongitude: ${pos.lng()}`;
-            }
-
-            autocomplete = new google.maps.places.Autocomplete(
-                document.getElementById("input-address"), {
-                    types: ["geocode"]
+            function handleLocationError(browserHasGeolocation, error) {
+                const btnText = document.getElementById('location-btn-text');
+                const statusEl = document.getElementById('location-status');
+                
+                btnText.textContent = 'Coba Lagi';
+                
+                let errorMessage = '';
+                if (!browserHasGeolocation) {
+                    errorMessage = 'Browser Anda tidak mendukung geolokasi.';
+                } else if (error) {
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Akses lokasi ditolak. Silakan izinkan di pengaturan browser.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Informasi lokasi tidak tersedia.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Waktu permintaan lokasi habis. Coba lagi.';
+                            break;
+                        default:
+                            errorMessage = 'Terjadi kesalahan saat mendapatkan lokasi.';
+                    }
+                } else {
+                    errorMessage = 'Gagal mendapatkan lokasi.';
                 }
-            );
+                
+                statusEl.textContent = '❌ ' + errorMessage;
+                statusEl.className = 'text-sm mt-1 text-red-600';
+                console.error(errorMessage, error);
+            }
 
-            autocomplete.bindTo("bounds", map);
-            autocomplete.addListener("place_changed", onPlaceChanged);
+            // Handle address search
+            const addressInput = document.getElementById('input-address');
+            addressInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    searchLocation();
+                }
+            });
 
-            function onPlaceChanged() {
-                const place = autocomplete.getPlace();
-                if (!place.geometry) {
+            function isValidAddress(address) {
+                // Basic validation: non-empty, reasonable length, and no clearly dangerous characters
+                if (typeof address !== 'string') {
+                    return false;
+                }
+
+                const trimmed = address.trim();
+                if (trimmed.length === 0 || trimmed.length > 200) {
+                    return false;
+                }
+
+                // Disallow characters that are unlikely in a normal address and may be used for injection
+                const invalidPattern = /[<>\\{}]/;
+                if (invalidPattern.test(trimmed)) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            function searchLocation() {
+                const rawAddress = addressInput.value;
+                const address = typeof rawAddress === 'string' ? rawAddress.trim() : '';
+
+                if (!address) {
                     return;
                 }
 
-                if (place.geometry.viewport) {
-                    map.fitBounds(place.geometry.viewport);
-                } else {
-                    map.setCenter(place.geometry.location);
-                    map.setZoom(17);
+                if (!isValidAddress(address)) {
+                    console.warn('Invalid address input rejected.');
+                    return;
                 }
+
+                const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address);
+
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Geocoding request failed with status ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!Array.isArray(data) || data.length === 0) {
+                            alert('Alamat tidak ditemukan. Silakan periksa kembali alamat yang dimasukkan.');
+                            return;
+                        }
+
+                        const place = data[0];
+                        const lat = parseFloat(place.lat);
+                        const lng = parseFloat(place.lon);
+
+                        map.setView([lat, lng], 17);
+
+                        if (marker) {
+                            marker.setLatLng([lat, lng]);
+                        } else {
+                            marker = L.marker([lat, lng]).addTo(map)
+                                .bindPopup('Selected Location');
+                        }
+
+                        document.getElementById('latitude').value = lat;
+                        document.getElementById('longitude').value = lng;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat mencari alamat. Periksa koneksi internet Anda dan coba lagi.');
+                    });
+            }
+
+            // Handle map clicks
+            map.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
 
                 if (marker) {
-                    marker.setPosition(place.geometry.location);
+                    marker.setLatLng([lat, lng]);
                 } else {
-                    marker = new google.maps.Marker({
-                        position: place.geometry.location,
-                        map: map,
-                        title: "Selected Location",
-                    });
+                    marker = L.marker([lat, lng]).addTo(map)
+                        .bindPopup('Selected Location');
                 }
 
-                document.getElementById("latitude").value = place.geometry.location.lat();
-                document.getElementById("longitude").value = place.geometry.location.lng();
-
-                document.getElementById("coordinates").innerText =
-                    `Coordinates:\nLatitude: ${place.geometry.location.lat()}\nLongitude: ${place.geometry.location.lng()}`;
-            }
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lng;
+            });
         }
+
+        // Initialize map on page load
+        (function() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initMap);
+            } else {
+                initMap();
+            }
+        })();
     </script>
     <script>
         function previewImage(event) {

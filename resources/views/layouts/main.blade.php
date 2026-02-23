@@ -2,8 +2,7 @@
 <html lang="en">
 
 <head>
-    {{-- @vite('resources/css/app.css', 'resources/js/app.js') --}}
-    <link href="{{ secure_asset('build/assets/app-GJGlotqp.css ') }}" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <meta charset="UTF-8">
     <link rel="icon" href="{{ secure_asset('/favicon.ico') }}" type="image/x-icon">
@@ -18,7 +17,6 @@
     @include('partials/navbar')
     @yield('container')
     @include('partials/footer')
-    <script src="{{ secure_asset('build/assets/app-Wo4miWF5.js') }}" defer></script>
 </body>
 
 </html>
