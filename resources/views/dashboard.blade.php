@@ -118,7 +118,7 @@
         const data = <?php echo json_encode($data); ?>;
         const categories = <?php echo json_encode($categories); ?>;
         const assetBase = "{{ asset('') }}";
-        const iconUrls = Array.from({length: categories.length + 1}, (_, i) => assetBase + "storage/icons/icon_" + (i + 1) + ".png");
+        const iconUrls = Array.from({length: categories.length + 1}, (_, i) => assetBase + "icons/icon_" + (i + 1) + ".png");
 
         const defaultCenter = data.length ?
             [parseFloat(data[0].latitude), parseFloat(data[0].longitude)] :

@@ -21,7 +21,7 @@ class CategoryFactory extends Factory
       'jenis' => $jenis,
       'tinggi_minimal' => $jenis * 10 - 10,
       'tinggi_maksimal' => $jenis * 10,
-      'ikon' => 'storage/icons/icon_' . $jenis . '.png',
+      'ikon' => 'icons/icon_' . $jenis . '.png',
     ];
   }
 }
