@@ -1,6 +1,7 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\MobileSurveyController;
+use App\Http\Controllers\MobileUserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -8,12 +9,23 @@ use Illuminate\Support\Facades\Route;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
+| Mobile API routes using JWT auth (stateless).
+| Base URL: /api/mobile/...
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::prefix('mobile')->group(function () {
+
+    // Public routes — no token needed
+    Route::post('/register', [MobileUserController::class, 'register']);
+    Route::post('/login',    [MobileUserController::class, 'login']);
+
+    // Protected routes — requires Bearer JWT token
+    Route::middleware('auth:api')->group(function () {
+        Route::post('/logout',      [MobileUserController::class,  'logout']);
+        Route::get('/me',           [MobileUserController::class,  'me']);
+        Route::post('/entry',       [MobileSurveyController::class, 'entry']);
+        Route::get('/surveys',      [MobileSurveyController::class, 'surveys']);
+        Route::get('/categories',   [MobileSurveyController::class, 'categories']);
+    });
 });
