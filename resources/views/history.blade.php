@@ -5,7 +5,7 @@
         <div class="fRow justify-between">
             <div>
                 <h1 class="font-bold text-2xl">Riwayat Entri</h1>
-                <p class="font-light my-2 text-base text-Inactive">Berikut adalah seluruh entri data survei yang telah
+                <p class="font-light my-2 text-base text-Inactive">Berikut adalah seluruh entri data laporan genangan yang telah
                     tercatat pada
                     sistem.</p>
             </div>

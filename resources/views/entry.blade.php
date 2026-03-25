@@ -5,8 +5,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <div class="hNav bg-[#F8FCFF] flex flex-col justify-center items-center py-12">
         <div class=" text-center my-4">
-            <h1 class="font-bold text-3xl">Entri Data Survei</h1>
-            <p class="font-light my-2 text-base text-Inactive"">Masukkan data-data survei yang telah dikumpulkan untuk
+            <h1 class="font-bold text-3xl">Entri Data Laporan Genangan</h1>
+            <p class="font-light my-2 text-base text-Inactive"">Masukkan data-data laporan genangan yang telah dikumpulkan untuk
                 menampilkannya di
                 halaman beranda</p>
         </div>

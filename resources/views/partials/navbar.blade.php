@@ -35,7 +35,7 @@
                     class="{{ $route === 'entry' ? 'md:border-b-2 md:border-blue-600' : '' }}  md:flex md:h-full md:items-center">
                     <a href="{{ route('entry') }}"
                         class="{{ $route === 'entry' ? 'md:text-Active bg-Active text-white' : 'text-Inactive' }} md:text-[16px] md:font-normal block py-2 px-3 rounded md:bg-transparent md:p-0"
-                        aria-current="page">Entri Survei</a>
+                        aria-current="page">Entri Laporan Genangan</a>
                 </li>
                 <li
                     class="{{ $route === 'history' ? 'md:border-b-2 md:border-blue-600' : '' }}  md:flex md:h-full md:items-center">

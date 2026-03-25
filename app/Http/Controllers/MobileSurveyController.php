@@ -61,7 +61,7 @@ class MobileSurveyController extends Controller
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Berhasil melakukan entri survei',
+            'message' => 'Berhasil melakukan entri laporan genangan',
             'data'    => $survey,
         ], 201);
     }
@@ -101,7 +101,7 @@ class MobileSurveyController extends Controller
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Berhasil mendapatkan data survei',
+            'message' => 'Berhasil mendapatkan data laporan genangan',
             'data'    => [
                 'surveys'    => $surveys,
                 'start_date' => $startDate ?? null,

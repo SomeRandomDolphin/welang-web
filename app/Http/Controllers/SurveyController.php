@@ -78,7 +78,7 @@ class SurveyController extends Controller
     ]));
 
     Alert::success('Sukses', 'Data telah berhasil dicatat');
-    return redirect('/entry')->with('success', 'Entri data survei berhasil');
+    return redirect('/entry')->with('success', 'Entri data laporan genangan berhasil');
   }
 
   public function dashboard(Request $request)
