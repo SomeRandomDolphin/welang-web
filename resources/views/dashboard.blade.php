@@ -53,13 +53,14 @@
             <x-modal :categories="$categories" />
 
             <div class="h-full w-full md:w-[75%] flex flex-col gap-y-2">
+                <div class="flex items-stretch gap-x-2">
                 <form id="filterForm" action="{{ route('dashboard') }}" method="GET"
-                    class="border h-[40%] md:h-[12%] rounded-lg bg-white flex justify-evenly md:justify-between items-center md:px-10 drop-shadow-sm">
+                    class="flex-1 border h-auto md:h-[56px] rounded-lg bg-white flex flex-wrap justify-evenly md:justify-between items-center px-3 md:px-6 py-2 md:py-0 drop-shadow-sm gap-y-2 md:gap-y-0">
 
                     <h2 class="text-sm text-graySecondary hidden md:block">Filter dan Lokasi</h2>
 
-                    <div class="flex flex-col md:flex-row text-grayPrimary items-center h-full md:gap-x-4 py-2">
-                        <div class="flex flex-col md:flex-row h-full items-center gap-y-1">
+                    <div class="flex flex-col md:flex-row text-grayPrimary items-center md:gap-x-4">
+                        <div class="flex flex-col md:flex-row items-center gap-y-1">
                         <h3 class="textFilter font-medium">TANGGAL</h3>
                         <div class="flex justify-center items-center">
                             <input datepicker datepicker-format="yyyy-mm-dd" type="date" name="start"
@@ -78,23 +79,22 @@
                         </div>
                         
 
-                        <div class="flex flex-col justify-start items-center md:flex-row w-full h-full md:gap-x-2">
+                        <div class="flex flex-col justify-start items-center md:flex-row md:gap-x-2">
                         <h3 class="textFilter font-medium">TINGGI</h3>
-                        <div class="flex justify-center items-center gap-x-3 w-full h-full">
+                        <div class="flex justify-center items-center gap-x-3">
                             <input name="min" type="number" id="heightInput"
-                                class="border rounded-lg border-slate-500/20 text-black text-center focus:ring-0 focus:border-none pFormActive font-light"
+                                class="border rounded-lg border-slate-500/20 text-black text-center focus:ring-0 focus:border-none pFormActive font-light w-16"
                                 placeholder="0" min="0" max="100" value="{{ $filter['min_height'] ?? '' }}">
 
                             <p>-</p>
 
                             <input name="max" type="number" id="heightInput"
-                                class="border rounded-lg border-slate-500/20 text-black text-center focus:ring-0 focus:border-none pFormActive font-light"
+                                class="border rounded-lg border-slate-500/20 text-black text-center focus:ring-0 focus:border-none pFormActive font-light w-16"
                                 placeholder="0" min="0" max="100" value="{{ $filter['max_height'] ?? '' }}">
-                            <p class="text-gray-500 font-light">Centimeter</p>
-
+                            <p class="text-gray-500 font-light">cm</p>
 
                         <x-button message="Filter" type="submit" color="Primary" link=""
-                            classname="px-5 py-[0.4rem] mx-4 rounded-lg text-base" icons="" />
+                            classname="px-4 py-[0.4rem] rounded-lg text-sm" icons="" />
                         </div>
 
                         </div>
@@ -102,7 +102,15 @@
                     </div>
 
                 </form>
-                <div id="map" class="border h-full rounded-lg bg-white drop-shadow-sm"></div>
+                <a href="{{ route('entry') }}"
+                    class="flex-shrink-0 flex items-center justify-center gap-x-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-colors text-sm md:text-base whitespace-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Lapor Genangan</span>
+                </a>
+                </div>
+                <div id="map" class="border min-h-[50vh] md:h-full rounded-lg bg-white drop-shadow-sm"></div>
             </div>
 
         </div>
