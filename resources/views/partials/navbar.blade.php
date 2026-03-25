@@ -15,6 +15,12 @@
             </svg>
         </button>
 
+        <!-- Lapor Genangan Button (Mobile) -->
+        <a href="{{ route('entry') }}"
+            class="md:hidden flex items-center justify-center gap-x-2 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-semibold px-3 py-2 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 text-xs">
+            <span>Lapor Genangan</span>
+        </a>
+
         <div class="hidden w-full md:flex h-full md:w-full md:justify-between md:h-full items-center md:px-10 mt-5 md:mt-0"
             id="navbar-default">
             <ul
@@ -29,7 +35,7 @@
                     class="{{ $route === 'entry' ? 'md:border-b-2 md:border-blue-600' : '' }}  md:flex md:h-full md:items-center">
                     <a href="{{ route('entry') }}"
                         class="{{ $route === 'entry' ? 'md:text-Active bg-Active text-white' : 'text-Inactive' }} md:text-[16px] md:font-normal block py-2 px-3 rounded md:bg-transparent md:p-0"
-                        aria-current="page">Entri Survei</a>
+                        aria-current="page">Entri Laporan Genangan</a>
                 </li>
                 <li
                     class="{{ $route === 'history' ? 'md:border-b-2 md:border-blue-600' : '' }}  md:flex md:h-full md:items-center">
@@ -38,6 +44,7 @@
                         aria-current="page">Riwayat</a>
                 </li>
             </ul>
+            <div class="flex gap-4 items-center">
             @if (Auth::check())
                 <button data-modal-target="popup-modal" data-modal-toggle="popup-modal"
                     class="block text-white hover:bg-slate-950 bg-BlackPrimary font-medium rounded-lg text-sm px-5 py-2.5 text-center "
@@ -53,6 +60,15 @@
                 </div>
             @endif
 
+            <!-- Lapor Genangan Button (Desktop) -->
+            <a href="{{ route('entry') }}"
+                class="hidden md:flex items-center justify-center gap-x-2 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-semibold px-4 py-2 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 whitespace-nowrap text-sm">
+                <!-- <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg> -->
+                <span class="inline">Lapor Genangan</span>
+            </a>
+            </div>
         </div>
     </div>
 </nav>

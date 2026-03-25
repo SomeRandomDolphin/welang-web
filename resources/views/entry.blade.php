@@ -5,14 +5,14 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <div class="hNav bg-[#F8FCFF] flex flex-col justify-center items-center py-12">
         <div class=" text-center my-4">
-            <h1 class="font-bold text-3xl">Entri Data Survei</h1>
-            <p class="font-light my-2 text-base text-Inactive"">Masukkan data-data survei yang telah dikumpulkan untuk
+            <h1 class="font-bold text-3xl">Entri Data Laporan Genangan</h1>
+            <p class="font-light my-2 text-base text-Inactive"">Masukkan data-data laporan genangan yang telah dikumpulkan untuk
                 menampilkannya di
                 halaman beranda</p>
         </div>
 
         <form id="searchForm" action="{{ route('entry') }}" method="POST" enctype="multipart/form-data"
-            class="w-[90%] xl:w-[60%] border p-8 rounded-lg bg-white mx-auto">
+            class="w-full sm:w-[90%] xl:w-[60%] border p-5 sm:p-8 rounded-lg bg-white mx-auto">
             @csrf
             <x-forms.input label="Tanggal Kejadian" classname="w-full my-2" placeholder="Tanggal Kejadian"
                 name="tanggal_kejadian" type="datetime-local" value="" />
@@ -23,37 +23,68 @@
             <div class="flex flex-col justify-center w-full">
                 <label for="foto" class="pFormActive">Foto</label>
                 <label for="foto"
-                    class="my-2 flex flex-col items-center justify-center w-full min-h-24 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100">
+                    class="my-2 flex flex-col items-center justify-center w-full min-h-24 border border-gray-200 rounded-lg hover:bg-gray-100">
                     <img src="./camera.svg" alt="icon" class="max-h-128 h-fit rounded-lg" id="file-preview">
                     <p id="file-preview-title"></p>
                     <input id="foto" type="file" class="hidden" name="foto" accept="image/*"
                         onchange="previewImage(event);" />
                 </label>
+                <div class="flex w-full gap-2">
+                    <button type="button" onclick="openCameraPicker()"
+                        class="flex-1 py-2 px-3 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors">
+                        Ambil dari Kamera
+                    </button>
+                    <!-- <button type="button" onclick="openGalleryPicker()"
+                        class="flex-1 py-2 px-3 rounded-lg bg-gray-600 text-white text-sm font-medium hover:bg-gray-700 active:bg-gray-800 transition-colors">
+                        Pilih dari Galeri
+                    </button> -->
+                </div>
             </div>
 
             <div class="flex flex-col items-start w-full my-2">
-                <label for="lokasi" class="block mb-2 pFormActive">Lokasi</label>
-                <div class="relative w-full mb-2">
-                    <div class="absolute inset-y-0 flex items-center right-0 pointer-events-none">
-                        <svg class="w-4 h-fit mx-5 text-gray-500 dark:text-gray-400" aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 20">
-                            <path
-                                d="M8 0a7.992 7.992 0 0 0-6.583 12.535 1 1 0 0 0 .12.183l.12.146c.112.145.227.285.326.4l5.245 6.374a1 1 0 0 0 1.545-.003l5.092-6.205c.206-.222.4-.455.578-.7l.127-.155a.934.934 0 0 0 .122-.192A8.001 8.001 0 0 0 8 0Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
-                        </svg>
-                    </div>
-                    <input type="text" id="input-address"
-                        class="border border-gray-200 pFormActive font-light rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full"
-                        placeholder="Masukkan Lokasi Kejadian">
-                </div>
-                <button type="button" id="btn-get-location" 
-                    class="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <label class="block mb-2 pFormActive">Lokasi</label>
+
+                {{-- "Gunakan Lokasi Saya" button at the top --}}
+                <button type="button" id="btn-get-location"
+                    class="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 flex items-center justify-center gap-2 font-medium transition-colors">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                     <span id="location-btn-text">Gunakan Lokasi Saya</span>
                 </button>
-                <p id="location-status" class="text-sm mt-1 text-gray-600"></p>
+                <p id="location-status" class="text-sm mt-1 text-gray-600 min-h-[1.25rem]" role="status" aria-live="polite"></p>
+
+                {{-- Divider --}}
+                <div class="flex items-center w-full my-2 gap-x-2">
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                    <span class="text-xs text-gray-400 font-medium uppercase">atau cari alamat</span>
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                </div>
+
+                {{-- Address search input with search button --}}
+                <div class="flex w-full gap-x-2">
+                    <div class="relative flex-1 z-[1000]">
+                        <div class="absolute inset-y-0 flex items-center right-0 pointer-events-none">
+                            <svg class="w-4 h-fit mx-3 text-gray-400" aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 20">
+                                <path
+                                    d="M8 0a7.992 7.992 0 0 0-6.583 12.535 1 1 0 0 0 .12.183l.12.146c.112.145.227.285.326.4l5.245 6.374a1 1 0 0 0 1.545-.003l5.092-6.205c.206-.222.4-.455.578-.7l.127-.155a.934.934 0 0 0 .122-.192A8.001 8.001 0 0 0 8 0Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
+                            </svg>
+                        </div>
+                        <input type="text" id="input-address"
+                            class="border border-gray-200 pFormActive font-light rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2 pr-8"
+                            placeholder="Ketik alamat lalu tekan Cari atau Enter">
+                        <div id="address-suggestions"
+                            class="hidden absolute top-full left-0 z-[1001] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md max-h-60 overflow-auto"
+                            role="listbox" aria-label="Saran alamat"></div>
+                    </div>
+                    <!-- <button type="button" id="btn-search-location"
+                        class="flex-shrink-0 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 active:bg-gray-900 text-sm font-medium transition-colors"
+                        aria-label="Cari lokasi berdasarkan alamat">
+                        Cari
+                    </button> -->
+                </div>
             </div>
 
             <div class="flex flex-col justify-center w-full h-[50vh] mt-2 border border-gray-200 rounded-lg" id="map">
@@ -67,13 +98,55 @@
 
     </div>
     <script>
-        document.getElementById('customDatePicker').addEventListener('click', function() {
-            document.getElementById('hiddenDatePicker').click();
-        });
-    </script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/nominatim-js@3.1.0/build/nominatim.min.js"></script>
+        function setLocalDatetimeDefault() {
+            const input = document.querySelector('input[name="tanggal_kejadian"]');
+            if (!input || input.value) {
+                return;
+            }
 
+            const now = new Date();
+            const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                .toISOString()
+                .slice(0, 16);
+
+            input.value = localNow;
+        }
+
+        function previewImage(event) {
+            const input = event.target;
+            if (!input.files || !input.files[0]) {
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = function() {
+                const imgElement = document.getElementById('file-preview');
+                const titleElement = document.getElementById('file-preview-title');
+                imgElement.classList.add('w-full');
+                imgElement.src = reader.result;
+                titleElement.textContent = input.files[0].name;
+            };
+
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function openCameraPicker() {
+            const fileInput = document.getElementById('foto');
+            fileInput.setAttribute('capture', 'environment');
+            fileInput.click();
+        }
+
+        function openGalleryPicker() {
+            const fileInput = document.getElementById('foto');
+            fileInput.removeAttribute('capture');
+            fileInput.click();
+        }
+
+        setLocalDatetimeDefault();
+    </script>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map;
         let marker;
@@ -89,14 +162,8 @@
             }).addTo(map);
 
             // Check if site is using HTTPS (required for mobile geolocation)
-            const isSecure = window.location.protocol === 'https:';
             const statusEl = document.getElementById('location-status');
             
-            if (!isSecure) {
-                statusEl.textContent = '⚠️ Peringatan: Geolokasi di perangkat mobile memerlukan HTTPS';
-                statusEl.className = 'text-sm mt-1 text-orange-600';
-            }
-
             // Add button click handler for manual location request
             document.getElementById('btn-get-location').addEventListener('click', function() {
                 getUserLocation();
@@ -190,12 +257,134 @@
 
             // Handle address search
             const addressInput = document.getElementById('input-address');
+            const suggestionsBox = document.getElementById('address-suggestions');
+            let suggestionDebounceTimer = null;
+            let suggestionController = null;
+
+            function hideSuggestions() {
+                suggestionsBox.classList.add('hidden');
+                suggestionsBox.innerHTML = '';
+            }
+
+            function showSuggestionLoading() {
+                suggestionsBox.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">Mencari saran alamat...</div>';
+                suggestionsBox.classList.remove('hidden');
+            }
+
+            function renderSuggestions(places) {
+                if (!Array.isArray(places) || places.length === 0) {
+                    hideSuggestions();
+                    return;
+                }
+
+                const html = places.map((place) => {
+                    const name = String(place.display_name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const lat = String(place.lat || '');
+                    const lon = String(place.lon || '');
+
+                    return `<button type="button" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-b-0" data-lat="${lat}" data-lon="${lon}" data-name="${name}" role="option">${name}</button>`;
+                }).join('');
+
+                suggestionsBox.innerHTML = html;
+                suggestionsBox.classList.remove('hidden');
+            }
+
+            function fetchSuggestions(query) {
+                if (suggestionController) {
+                    suggestionController.abort();
+                }
+
+                suggestionController = new AbortController();
+                const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=' + encodeURIComponent(query);
+
+                fetch(url, {
+                        signal: suggestionController.signal
+                    })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error('Suggestion request failed with status ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        renderSuggestions(data);
+                    })
+                    .catch((error) => {
+                        if (error.name !== 'AbortError') {
+                            console.error('Suggestion error:', error);
+                            hideSuggestions();
+                        }
+                    });
+            }
+
+            addressInput.addEventListener('input', function() {
+                const query = typeof addressInput.value === 'string' ? addressInput.value.trim() : '';
+
+                if (suggestionDebounceTimer) {
+                    clearTimeout(suggestionDebounceTimer);
+                }
+
+                if (query.length < 2 || !isValidAddress(query)) {
+                    hideSuggestions();
+                    return;
+                }
+
+                showSuggestionLoading();
+                suggestionDebounceTimer = setTimeout(() => {
+                    fetchSuggestions(query);
+                }, 200);
+            });
+
             addressInput.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
+                    hideSuggestions();
                     searchLocation();
                 }
             });
+
+            suggestionsBox.addEventListener('click', function(event) {
+                const target = event.target.closest('button[data-lat][data-lon]');
+                if (!target) {
+                    return;
+                }
+
+                const lat = parseFloat(target.dataset.lat);
+                const lng = parseFloat(target.dataset.lon);
+                const name = target.dataset.name || '';
+
+                if (Number.isNaN(lat) || Number.isNaN(lng)) {
+                    return;
+                }
+
+                addressInput.value = name;
+                hideSuggestions();
+
+                map.setView([lat, lng], 17);
+
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng]).addTo(map)
+                        .bindPopup('Selected Location');
+                }
+
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lng;
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('#input-address') && !event.target.closest('#address-suggestions')) {
+                    hideSuggestions();
+                }
+            });
+
+            const searchButton = document.getElementById('btn-search-location');
+            if (searchButton) {
+                searchButton.addEventListener('click', function() {
+                    searchLocation();
+                });
+            }
 
             function isValidAddress(address) {
                 // Basic validation: non-empty, reasonable length, and no clearly dangerous characters
@@ -292,21 +481,6 @@
                 initMap();
             }
         })();
-    </script>
-    <script>
-        function previewImage(event) {
-            const input = event.target;
-            const reader = new FileReader();
-
-            reader.onload = function() {
-                const imgElement = document.getElementById('file-preview');
-                imgElement.classList.add('w-full');
-                imgElement.src = reader.result;
-                titleElement.textContent = input.files[0].name;
-            };
-
-            reader.readAsDataURL(input.files[0]);
-        }
     </script>
 @endsection
 

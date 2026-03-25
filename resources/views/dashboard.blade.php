@@ -53,13 +53,14 @@
             <x-modal :categories="$categories" />
 
             <div class="h-full w-full md:w-[75%] flex flex-col gap-y-2">
+                <div class="flex items-stretch gap-x-2">
                 <form id="filterForm" action="{{ route('dashboard') }}" method="GET"
-                    class="border h-[40%] md:h-[12%] rounded-lg bg-white flex justify-evenly md:justify-between items-center md:px-10 drop-shadow-sm">
+                    class="flex-1 border h-auto md:h-[56px] rounded-lg bg-white flex flex-wrap justify-evenly md:justify-between items-center px-3 md:px-6 py-2 md:py-0 drop-shadow-sm gap-y-2 md:gap-y-0">
 
                     <h2 class="text-sm text-graySecondary hidden md:block">Filter dan Lokasi</h2>
 
-                    <div class="flex flex-col md:flex-row text-grayPrimary items-center h-full md:gap-x-4 py-2">
-                        <div class="flex flex-col md:flex-row h-full items-center gap-y-1">
+                    <div class="flex flex-col md:flex-row text-grayPrimary items-center md:gap-x-4">
+                        <div class="flex flex-col md:flex-row items-center gap-y-1">
                         <h3 class="textFilter font-medium">TANGGAL</h3>
                         <div class="flex justify-center items-center">
                             <input datepicker datepicker-format="yyyy-mm-dd" type="date" name="start"
@@ -78,23 +79,22 @@
                         </div>
                         
 
-                        <div class="flex flex-col justify-start items-center md:flex-row w-full h-full md:gap-x-2">
+                        <div class="flex flex-col justify-start items-center md:flex-row md:gap-x-2">
                         <h3 class="textFilter font-medium">TINGGI</h3>
-                        <div class="flex justify-center items-center gap-x-3 w-full h-full">
+                        <div class="flex justify-center items-center gap-x-3">
                             <input name="min" type="number" id="heightInput"
-                                class="border rounded-lg border-slate-500/20 text-black text-center focus:ring-0 focus:border-none pFormActive font-light"
+                                class="border rounded-lg border-slate-500/20 text-black text-center focus:ring-0 focus:border-none pFormActive font-light w-16"
                                 placeholder="0" min="0" max="100" value="{{ $filter['min_height'] ?? '' }}">
 
                             <p>-</p>
 
                             <input name="max" type="number" id="heightInput"
-                                class="border rounded-lg border-slate-500/20 text-black text-center focus:ring-0 focus:border-none pFormActive font-light"
+                                class="border rounded-lg border-slate-500/20 text-black text-center focus:ring-0 focus:border-none pFormActive font-light w-16"
                                 placeholder="0" min="0" max="100" value="{{ $filter['max_height'] ?? '' }}">
-                            <p class="text-gray-500 font-light">Centimeter</p>
-
+                            <p class="text-gray-500 font-light">cm</p>
 
                         <x-button message="Filter" type="submit" color="Primary" link=""
-                            classname="px-5 py-[0.4rem] mx-4 rounded-lg text-base" icons="" />
+                            classname="px-4 py-[0.4rem] rounded-lg text-sm" icons="" />
                         </div>
 
                         </div>
@@ -102,7 +102,8 @@
                     </div>
 
                 </form>
-                <div id="map" class="border h-full rounded-lg bg-white drop-shadow-sm"></div>
+                </div>
+                <div id="map" class="border min-h-[50vh] md:h-full rounded-lg bg-white drop-shadow-sm"></div>
             </div>
 
         </div>
@@ -120,8 +121,9 @@
         const assetBase = "{{ asset('') }}";
         const iconUrls = Array.from({length: categories.length + 1}, (_, i) => assetBase + "icons/icon_" + (i + 1) + ".png");
 
-        const defaultCenter = data.length ?
-            [parseFloat(data[0].latitude), parseFloat(data[0].longitude)] :
+        const lastDataPoint = data.length ? data[data.length - 1] : null;
+        const defaultCenter = lastDataPoint ?
+            [parseFloat(lastDataPoint.latitude), parseFloat(lastDataPoint.longitude)] :
             [-7.2575, 112.7521];
 
         const map = L.map("map", {
@@ -132,20 +134,6 @@
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap contributors",
         }).addTo(map);
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const pos = [position.coords.latitude, position.coords.longitude];
-                    map.setView(pos, 12);
-                },
-                () => {
-                    handleLocationError(true);
-                }
-            );
-        } else {
-            handleLocationError(false);
-        }
 
         function handleLocationError(browserHasGeolocation) {
             const errorMessage = browserHasGeolocation ?
@@ -177,20 +165,20 @@
 
         function buildPopupContent(item) {
             let content =
-                "<div style=\"padding: 2px; display: flex; flex-direction: row; max-width: 800px;\">";
+                "<div style=\"padding: 4px; display: flex; flex-direction: row; align-items: flex-start; width: 100%; max-width: 280px; gap: 8px; box-sizing: border-box;\">";
 
             if (item.foto && isValidPhotoPath(item.foto)) {
                 const photoUrl = assetBase + "storage/" + item.foto;
                 content +=
-                    `<img src="${photoUrl}" style="max-width: 150px; height: auto; border-radius: 6px; margin-right: 8px;">`;
+                    `<img src="${photoUrl}" style="width: 96px; max-width: 96px; height: auto; border-radius: 6px; flex-shrink: 0;">`;
             }
 
             content +=
-                `<div style="display: flex; flex-direction: column; justify-content: center;">
-                    <p style="margin: 0; color: #4d4d4d; font-size: 16px; font-weight: 400; padding: 12px 0;">
+                `<div style="display: flex; flex-direction: column; justify-content: center; min-width: 0; width: 100%; overflow-wrap: anywhere; word-break: break-word;">
+                    <p style="margin: 0; color: #4d4d4d; font-size: 14px; font-weight: 400; line-height: 1.45; padding: 2px 0 8px;">
                         Ketinggian banjir : <span style="color : #0FB92A;">${item.tinggi}</span>
                     </p>
-                    <p style="margin: 0; color: #4d4d4d; font-size: 16px; font-weight: 400;">
+                    <p style="margin: 0; color: #4d4d4d; font-size: 14px; font-weight: 400; line-height: 1.45; overflow-wrap: anywhere; word-break: break-word;">
                         <span style="font-style: italic; font-weight: 300;">Dicatat Oleh</span> : ${item.user.name}
                     </p>
                 </div>
@@ -214,7 +202,10 @@
             }).addTo(map);
 
             const popupContent = buildPopupContent(item);
-            marker.bindPopup(popupContent);
+            marker.bindPopup(popupContent, {
+                maxWidth: 300,
+                minWidth: 220,
+            });
 
             marker.on("click", () => marker.openPopup());
             marker.on("mouseover", () => marker.openPopup());
