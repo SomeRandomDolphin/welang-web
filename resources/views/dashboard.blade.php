@@ -102,13 +102,6 @@
                     </div>
 
                 </form>
-                <a href="{{ route('entry') }}"
-                    class="flex-shrink-0 flex items-center justify-center gap-x-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-colors text-sm md:text-base whitespace-nowrap">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>Lapor Genangan</span>
-                </a>
                 </div>
                 <div id="map" class="border min-h-[50vh] md:h-full rounded-lg bg-white drop-shadow-sm"></div>
             </div>
@@ -140,20 +133,6 @@
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap contributors",
         }).addTo(map);
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const pos = [position.coords.latitude, position.coords.longitude];
-                    map.setView(pos, 12);
-                },
-                () => {
-                    handleLocationError(true);
-                }
-            );
-        } else {
-            handleLocationError(false);
-        }
 
         function handleLocationError(browserHasGeolocation) {
             const errorMessage = browserHasGeolocation ?
