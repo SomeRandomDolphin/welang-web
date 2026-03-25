@@ -121,8 +121,9 @@
         const assetBase = "{{ asset('') }}";
         const iconUrls = Array.from({length: categories.length + 1}, (_, i) => assetBase + "icons/icon_" + (i + 1) + ".png");
 
-        const defaultCenter = data.length ?
-            [parseFloat(data[0].latitude), parseFloat(data[0].longitude)] :
+        const lastDataPoint = data.length ? data[data.length - 1] : null;
+        const defaultCenter = lastDataPoint ?
+            [parseFloat(lastDataPoint.latitude), parseFloat(lastDataPoint.longitude)] :
             [-7.2575, 112.7521];
 
         const map = L.map("map", {
@@ -164,20 +165,20 @@
 
         function buildPopupContent(item) {
             let content =
-                "<div style=\"padding: 2px; display: flex; flex-direction: row; max-width: 800px;\">";
+                "<div style=\"padding: 4px; display: flex; flex-direction: row; align-items: flex-start; width: 100%; max-width: 280px; gap: 8px; box-sizing: border-box;\">";
 
             if (item.foto && isValidPhotoPath(item.foto)) {
                 const photoUrl = assetBase + "storage/" + item.foto;
                 content +=
-                    `<img src="${photoUrl}" style="max-width: 150px; height: auto; border-radius: 6px; margin-right: 8px;">`;
+                    `<img src="${photoUrl}" style="width: 96px; max-width: 96px; height: auto; border-radius: 6px; flex-shrink: 0;">`;
             }
 
             content +=
-                `<div style="display: flex; flex-direction: column; justify-content: center;">
-                    <p style="margin: 0; color: #4d4d4d; font-size: 16px; font-weight: 400; padding: 12px 0;">
+                `<div style="display: flex; flex-direction: column; justify-content: center; min-width: 0; width: 100%; overflow-wrap: anywhere; word-break: break-word;">
+                    <p style="margin: 0; color: #4d4d4d; font-size: 14px; font-weight: 400; line-height: 1.45; padding: 2px 0 8px;">
                         Ketinggian banjir : <span style="color : #0FB92A;">${item.tinggi}</span>
                     </p>
-                    <p style="margin: 0; color: #4d4d4d; font-size: 16px; font-weight: 400;">
+                    <p style="margin: 0; color: #4d4d4d; font-size: 14px; font-weight: 400; line-height: 1.45; overflow-wrap: anywhere; word-break: break-word;">
                         <span style="font-style: italic; font-weight: 300;">Dicatat Oleh</span> : ${item.user.name}
                     </p>
                 </div>
@@ -201,7 +202,10 @@
             }).addTo(map);
 
             const popupContent = buildPopupContent(item);
-            marker.bindPopup(popupContent);
+            marker.bindPopup(popupContent, {
+                maxWidth: 300,
+                minWidth: 220,
+            });
 
             marker.on("click", () => marker.openPopup());
             marker.on("mouseover", () => marker.openPopup());
