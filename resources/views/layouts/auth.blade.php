@@ -14,7 +14,7 @@
 </head>
 
 <body>
-    <div class="w-screen h-screen bg-[#F8FCFF] fMid items-center">
+    <div class="w-screen min-h-screen bg-[#F8FCFF] fMid items-start md:items-center py-6 md:py-0 overflow-y-auto">
         @yield('container')
     </div>
 
