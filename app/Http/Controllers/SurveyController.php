@@ -57,7 +57,7 @@ class SurveyController extends Controller
       'tinggi' => 'required|numeric|min:0',
       'latitude' => 'required|numeric|between:-90,90',
       'longitude' => 'required|numeric|between:-180,180',
-      'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+      'foto' => 'nullable|file|uploaded|mimetypes:image/jpeg,image/png,image/webp,image/heic,image/heif,image/heic-sequence,image/heif-sequence|max:10240',
     ], [
       'tanggal_kejadian.required' => 'Tanggal kejadian wajib diisi.',
       'tanggal_kejadian.date' => 'Format tanggal kejadian tidak valid.',
@@ -71,8 +71,9 @@ class SurveyController extends Controller
       'longitude.numeric' => 'Longitude harus berupa angka.',
       'longitude.between' => 'Longitude harus berada di antara -180 sampai 180.',
       'foto.file' => 'File foto tidak valid.',
-      'foto.mimes' => 'Format foto harus JPG atau PNG.',
-      'foto.max' => 'Ukuran foto maksimal 5 MB.',
+      'foto.uploaded' => 'Upload foto gagal. Ukuran foto kemungkinan melebihi batas server.',
+      'foto.mimetypes' => 'Format foto harus JPEG, PNG, WEBP, HEIC, atau HEIF.',
+      'foto.max' => 'Ukuran foto maksimal 10 MB.',
     ]);
 
     if ($validator->fails()) {

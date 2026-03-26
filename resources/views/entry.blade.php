@@ -41,7 +41,7 @@
                     class="my-2 flex flex-col items-center justify-center w-full min-h-24 border border-gray-200 rounded-lg hover:bg-gray-100">
                     <img src="./camera.svg" alt="icon" class="max-h-128 h-fit rounded-lg" id="file-preview">
                     <p id="file-preview-title"></p>
-                    <input id="foto" type="file" class="hidden" name="foto" accept="image/*"
+                    <input id="foto" type="file" class="hidden" name="foto" accept="image/*,.heic,.heif,.webp"
                         onchange="previewImage(event);" />
                 </label>
                 <div class="flex w-full gap-2">
@@ -49,10 +49,10 @@
                         class="flex-1 py-2 px-3 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors">
                         Ambil dari Kamera
                     </button>
-                    <!-- <button type="button" onclick="openGalleryPicker()"
+                    <button type="button" onclick="openGalleryPicker()"
                         class="flex-1 py-2 px-3 rounded-lg bg-gray-600 text-white text-sm font-medium hover:bg-gray-700 active:bg-gray-800 transition-colors">
                         Pilih dari Galeri
-                    </button> -->
+                    </button>
                 </div>
             </div>
 
@@ -113,6 +113,10 @@
 
     </div>
     <script>
+        const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
+        const MAX_IMAGE_DIMENSION = 1920;
+        const JPEG_QUALITY = 0.82;
+
         function setLocalDatetimeDefault() {
             const input = document.querySelector('input[name="tanggal_kejadian"]');
             if (!input || input.value) {
@@ -133,6 +137,14 @@
                 return;
             }
 
+            updateImagePreview(input.files[0]);
+        }
+
+        function updateImagePreview(file) {
+            if (!file) {
+                return;
+            }
+
             const reader = new FileReader();
 
             reader.onload = function() {
@@ -140,10 +152,120 @@
                 const titleElement = document.getElementById('file-preview-title');
                 imgElement.classList.add('w-full');
                 imgElement.src = reader.result;
-                titleElement.textContent = input.files[0].name;
+                titleElement.textContent = file.name;
             };
 
-            reader.readAsDataURL(input.files[0]);
+            reader.readAsDataURL(file);
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('Gagal membaca file foto.'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function loadImage(dataUrl) {
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = () => reject(new Error('Format foto tidak didukung browser.'));
+                image.src = dataUrl;
+            });
+        }
+
+        function canvasToBlob(canvas, type, quality) {
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => resolve(blob), type, quality);
+            });
+        }
+
+        async function compressImage(file) {
+            if (!file || typeof file.type !== 'string' || !file.type.startsWith('image/')) {
+                return file;
+            }
+
+            const dataUrl = await readFileAsDataURL(file);
+            const image = await loadImage(dataUrl);
+
+            const longestSide = Math.max(image.width, image.height);
+            const ratio = longestSide > MAX_IMAGE_DIMENSION ? MAX_IMAGE_DIMENSION / longestSide : 1;
+            const targetWidth = Math.max(1, Math.round(image.width * ratio));
+            const targetHeight = Math.max(1, Math.round(image.height * ratio));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+
+            const context = canvas.getContext('2d');
+            if (!context) {
+                return file;
+            }
+
+            context.drawImage(image, 0, 0, targetWidth, targetHeight);
+            const blob = await canvasToBlob(canvas, 'image/jpeg', JPEG_QUALITY);
+            if (!blob) {
+                return file;
+            }
+
+            const baseName = (file.name || 'foto').replace(/\.[^/.]+$/, '');
+            return new File([blob], baseName + '.jpg', {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+            });
+        }
+
+        function setPhotoStatus(message, isError = false) {
+            const titleElement = document.getElementById('file-preview-title');
+            if (!titleElement) {
+                return;
+            }
+
+            titleElement.textContent = message;
+            titleElement.className = isError ? 'text-red-600 text-sm mt-1' : 'text-gray-600 text-sm mt-1';
+        }
+
+        async function processPhotoBeforeSubmit(event) {
+            const form = document.getElementById('searchForm');
+            const fileInput = document.getElementById('foto');
+
+            if (!form || !fileInput || !fileInput.files || !fileInput.files[0]) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const originalFile = fileInput.files[0];
+            let finalFile = originalFile;
+
+            try {
+                setPhotoStatus('Sedang mengompresi foto dari kamera...');
+                finalFile = await compressImage(originalFile);
+            } catch (error) {
+                console.warn('Kompresi foto dilewati:', error);
+                finalFile = originalFile;
+            }
+
+            if (finalFile.size > MAX_UPLOAD_SIZE_BYTES) {
+                setPhotoStatus('Foto terlalu besar. Coba ambil ulang dengan resolusi lebih rendah.', true);
+                return;
+            }
+
+            if (typeof DataTransfer !== 'undefined') {
+                const transfer = new DataTransfer();
+                transfer.items.add(finalFile);
+                fileInput.files = transfer.files;
+            }
+
+            updateImagePreview(finalFile);
+
+            if (finalFile.size < originalFile.size) {
+                setPhotoStatus('Foto berhasil dikompresi dan siap diunggah.');
+            }
+
+            form.submit();
         }
 
         function openCameraPicker() {
@@ -157,6 +279,15 @@
             fileInput.removeAttribute('capture');
             fileInput.click();
         }
+
+        (function setupImageCompressionBeforeSubmit() {
+            const form = document.getElementById('searchForm');
+            if (!form) {
+                return;
+            }
+
+            form.addEventListener('submit', processPhotoBeforeSubmit);
+        })();
 
         setLocalDatetimeDefault();
     </script>
