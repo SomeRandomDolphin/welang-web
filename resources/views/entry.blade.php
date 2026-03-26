@@ -6,7 +6,7 @@
     <div class="hNav bg-[#F8FCFF] flex flex-col justify-center items-center py-12">
         <div class=" text-center my-4">
             <h1 class="font-bold text-3xl">Entri Data Laporan Genangan</h1>
-            <p class="font-light my-2 text-base text-Inactive"">Masukkan data-data laporan genangan yang telah dikumpulkan untuk
+            <p class="font-light my-2 text-base text-Inactive">Masukkan data-data laporan genangan yang telah dikumpulkan untuk
                 menampilkannya di
                 halaman beranda</p>
         </div>
@@ -14,6 +14,21 @@
         <form id="searchForm" action="{{ route('entry') }}" method="POST" enctype="multipart/form-data"
             class="w-full sm:w-[90%] xl:w-[60%] border p-5 sm:p-8 rounded-lg bg-white mx-auto">
             @csrf
+
+            @if (session('failed'))
+                <div class="w-full bg-red-500 text-white px-4 py-3 rounded-lg text-sm mb-2" role="alert">
+                    {{ session('failed') }}
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="w-full bg-red-500 text-white px-4 py-3 rounded-lg text-sm text-left mb-2" role="alert">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
+
             <x-forms.input label="Tanggal Kejadian" classname="w-full my-2" placeholder="Tanggal Kejadian"
                 name="tanggal_kejadian" type="datetime-local" value="" />
 

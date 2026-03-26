@@ -53,11 +53,33 @@ class SurveyController extends Controller
   public function entry(Request $request)
   {
     $validator = Validator::make($request->all(), [
-      'foto' => 'nullable|file|max:5120',
+      'tanggal_kejadian' => 'required|date',
+      'tinggi' => 'required|numeric|min:0',
+      'latitude' => 'required|numeric|between:-90,90',
+      'longitude' => 'required|numeric|between:-180,180',
+      'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+    ], [
+      'tanggal_kejadian.required' => 'Tanggal kejadian wajib diisi.',
+      'tanggal_kejadian.date' => 'Format tanggal kejadian tidak valid.',
+      'tinggi.required' => 'Tinggi genangan wajib diisi.',
+      'tinggi.numeric' => 'Tinggi genangan harus berupa angka.',
+      'tinggi.min' => 'Tinggi genangan tidak boleh kurang dari 0 cm.',
+      'latitude.required' => 'Latitude wajib diisi. Silakan pilih lokasi pada peta.',
+      'latitude.numeric' => 'Latitude harus berupa angka.',
+      'latitude.between' => 'Latitude harus berada di antara -90 sampai 90.',
+      'longitude.required' => 'Longitude wajib diisi. Silakan pilih lokasi pada peta.',
+      'longitude.numeric' => 'Longitude harus berupa angka.',
+      'longitude.between' => 'Longitude harus berada di antara -180 sampai 180.',
+      'foto.file' => 'File foto tidak valid.',
+      'foto.mimes' => 'Format foto harus JPG atau PNG.',
+      'foto.max' => 'Ukuran foto maksimal 5 MB.',
     ]);
 
     if ($validator->fails()) {
-      return redirect('/entry')->with('failed', 'Ukuran foto maksimal 5 MB');
+      return redirect('/entry')
+        ->withErrors($validator)
+        ->withInput()
+        ->with('failed', 'Data belum valid. Silakan periksa kembali isian Anda.');
     }
 
     $survey = [];
