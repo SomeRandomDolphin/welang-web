@@ -3,6 +3,28 @@
 @section('container')
     @include('sweetalert::alert')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        .scrollbar-visible {
+            scrollbar-width: auto;
+            scrollbar-color: #94a3b8 #e5e7eb;
+            scrollbar-gutter: stable;
+        }
+
+        .scrollbar-visible::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .scrollbar-visible::-webkit-scrollbar-track {
+            background: #e5e7eb;
+            border-radius: 9999px;
+        }
+
+        .scrollbar-visible::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 9999px;
+            border: 2px solid #e5e7eb;
+        }
+    </style>
     <div class="hNav bg-[#F8FCFF] flex flex-col justify-center items-center py-12">
         <div class=" text-center my-4">
             <h1 class="font-bold text-3xl">Entri Data Laporan Genangan</h1>
@@ -29,11 +51,93 @@
                 </div>
             @endif
 
-            <x-forms.input label="Tanggal Kejadian" classname="w-full my-2" placeholder="Tanggal Kejadian"
-                name="tanggal_kejadian" type="datetime-local" value="" />
+            @php
+                $heightGuides = [
+                    ['patokan' => 'Setumit dewasa', 'perkiraan' => '5-10 cm'],
+                    ['patokan' => 'Sebetis dewasa', 'perkiraan' => '20-30 cm'],
+                    ['patokan' => 'Sepaha dewasa', 'perkiraan' => '40-50 cm'],
+                    ['patokan' => 'Seban motor matic', 'perkiraan' => '40-50 cm'],
+                    ['patokan' => 'Seban motor bebek', 'perkiraan' => '50-60 cm'],
+                    ['patokan' => 'Seban mobil pribadi', 'perkiraan' => '50-70 cm'],
+                    ['patokan' => 'Seban motor laki', 'perkiraan' => '60-70 cm'],
+                    ['patokan' => 'Seban mobil truk engkel', 'perkiraan' => '75-80 cm'],
+                    ['patokan' => 'Seban bis', 'perkiraan' => '100-110 cm'],
+                    ['patokan' => 'Sedada dewasa', 'perkiraan' => '120-150 cm'],
+                ];
+            @endphp
 
-            <x-forms.input label="Tinggi Genangan" classname="w-full my-2" placeholder="Tinggi Genangan Dalam cm"
-                name="tinggi" type="number" value="" />
+            <div class="w-full my-2 rounded-lg border border-gray-200 bg-slate-50 p-3">
+                <div class="flex flex-row items-start gap-3">
+                    <div class="min-w-0 flex-1">
+                        <div class="grid grid-cols-1 gap-2">
+                            <x-forms.input label="Tanggal Kejadian" classname="w-full my-0" placeholder="Tanggal Kejadian"
+                                name="tanggal_kejadian" type="datetime-local" value="" />
+
+                            <x-forms.input label="Tinggi Genangan" classname="w-full my-0" placeholder="Tinggi Genangan Dalam cm"
+                                name="tinggi" type="number" value="" />
+                        </div>
+                    </div>
+
+                    <div class="sticky top-3 self-start w-[9.5rem] sm:w-56 flex-shrink-0 rounded-md border border-blue-100 bg-white p-2">
+                        <div class="flex items-center justify-between gap-1">
+                            <p class="text-[11px] font-semibold uppercase tracking-wide text-blue-700">Perkiraan</p>
+                            <button type="button" id="btn-open-height-guide"
+                                class="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 hover:bg-blue-100">
+                                Perbesar
+                            </button>
+                        </div>
+
+                        <div class="mt-1 max-h-24 overflow-y-scroll pr-1 scrollbar-visible">
+                            <table class="w-full text-[10px] text-left text-gray-700">
+                                <tbody>
+                                    @foreach ($heightGuides as $guide)
+                                        <tr class="border-b border-gray-100 last:border-b-0 align-top">
+                                            <td class="py-0.5 pr-1">{{ $guide['patokan'] }}</td>
+                                            <td class="py-0.5 whitespace-nowrap">{{ $guide['perkiraan'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="height-guide-modal"
+                class="fixed inset-0 z-[1200] hidden items-center justify-center bg-black/50 p-4"
+                role="dialog" aria-modal="true" aria-labelledby="height-guide-modal-title">
+                <div class="w-full max-w-sm rounded-lg bg-white shadow-xl">
+                    <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+                        <h3 id="height-guide-modal-title" class="text-sm font-semibold text-gray-800">Perkiraan tinggi genangan</h3>
+                        <button type="button" id="btn-close-height-guide"
+                            class="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                            aria-label="Tutup popup perkiraan tinggi genangan">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="max-h-[70vh] overflow-y-scroll px-4 py-3 scrollbar-visible">
+                        <table class="w-full text-xs text-left text-gray-700">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th scope="col" class="py-1 pr-2 font-semibold">Patokan</th>
+                                    <th scope="col" class="py-1 font-semibold">Perkiraan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($heightGuides as $guide)
+                                    <tr class="border-b border-gray-100 last:border-b-0">
+                                        <td class="py-1 pr-2">{{ $guide['patokan'] }}</td>
+                                        <td class="py-1">{{ $guide['perkiraan'] }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
             <div class="flex flex-col justify-center w-full">
                 <label for="foto" class="pFormActive">Foto</label>
@@ -280,6 +384,43 @@
             fileInput.click();
         }
 
+        function setupHeightGuideModal() {
+            const openButton = document.getElementById('btn-open-height-guide');
+            const closeButton = document.getElementById('btn-close-height-guide');
+            const modal = document.getElementById('height-guide-modal');
+
+            if (!openButton || !closeButton || !modal) {
+                return;
+            }
+
+            function openModal() {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            }
+
+            openButton.addEventListener('click', openModal);
+            closeButton.addEventListener('click', closeModal);
+
+            modal.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        }
+
         (function setupImageCompressionBeforeSubmit() {
             const form = document.getElementById('searchForm');
             if (!form) {
@@ -289,6 +430,7 @@
             form.addEventListener('submit', processPhotoBeforeSubmit);
         })();
 
+        setupHeightGuideModal();
         setLocalDatetimeDefault();
     </script>
 

@@ -53,6 +53,7 @@
             <x-modal :categories="$categories" />
 
             <div class="h-full w-full md:w-[75%] flex flex-col gap-y-2">
+                
                 <div class="flex items-stretch gap-x-2">
                 <form id="filterForm" action="{{ route('dashboard') }}" method="GET"
                     class="flex-1 border h-auto md:h-[56px] rounded-lg bg-white flex flex-wrap justify-evenly md:justify-between items-center px-3 md:px-6 py-2 md:py-0 drop-shadow-sm gap-y-2 md:gap-y-0">
@@ -102,8 +103,25 @@
                     </div>
 
                 </form>
+            </div>
+            <div>
+                <h2 class="md:hidden text-center font-semibold text-gray-800 px-1">Informasi titik-titik Genangan/Banjir</h2>
+            </div>
+                <div class="relative">
+                    <div id="map" class="border min-h-[50vh] md:h-full rounded-lg bg-white drop-shadow-sm"></div>
+                    <div class="md:hidden absolute bottom-5 right-0 z-[500] w-[10rem] rounded-lg border border-gray-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
+                        <p class="text-[11px] font-semibold tracking-wide text-gray-700 uppercase">Legenda Kedalaman</p>
+                        <div class="mt-2 max-h-36 space-y-1.5 overflow-y-auto pr-1 text-[10px] text-gray-700">
+                            @foreach ($categories as $item)
+                                <div class="flex items-start gap-2 leading-tight">
+                                    <img src="{{ $item['ikon'] }}" alt="Ikon kategori {{ $item['jenis'] }}"
+                                        class="mt-0.5 h-4 w-4 flex-shrink-0 object-contain">
+                                    <span>Kategori {{ $item['jenis'] }}: {{ $item['tinggi_minimal'] }} - {{ $item['tinggi_maksimal'] }} cm</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
-                <div id="map" class="border min-h-[50vh] md:h-full rounded-lg bg-white drop-shadow-sm"></div>
             </div>
 
         </div>
