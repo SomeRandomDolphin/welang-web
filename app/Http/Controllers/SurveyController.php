@@ -237,10 +237,6 @@ class SurveyController extends Controller
   {
     $this->ensureAdmin();
 
-    if ($survey->foto && $survey->foto !== '/') {
-      Storage::disk('public')->delete($survey->foto);
-    }
-
     $survey->delete();
 
     Alert::success('Sukses', 'Data laporan berhasil dihapus');
