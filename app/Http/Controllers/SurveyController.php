@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use RealRashid\SweetAlert\Facades\Alert;
@@ -149,16 +150,19 @@ class SurveyController extends Controller
   public function history(Request $request)
   {
     $data = Survey::with('user');
-    $filter['start_date'] = $request->input('start');
-    $filter['end_date'] = $request->input('end');
+    $startDate = $this->normalizeDateInput($request->input('start'));
+    $endDate = $this->normalizeDateInput($request->input('end'));
+
+    $filter['start_date'] = $startDate ? Carbon::parse($startDate)->format('d/m/Y') : null;
+    $filter['end_date'] = $endDate ? Carbon::parse($endDate)->format('d/m/Y') : null;
     $filter['search'] = $request->input('search');
 
-    if ($filter['start_date']) {
-      $data->whereDate('tanggal_kejadian', '>=', $filter['start_date']);
+    if ($startDate) {
+      $data->whereDate('tanggal_kejadian', '>=', $startDate);
     }
 
-    if ($filter['end_date']) {
-      $data->whereDate('tanggal_kejadian', '<=', $filter['end_date']);
+    if ($endDate) {
+      $data->whereDate('tanggal_kejadian', '<=', $endDate);
     }
 
     if ($filter['search']) {
@@ -176,8 +180,103 @@ class SurveyController extends Controller
   public function export(Request $request)
   {
     return Excel::download(
-      new HistoryExport($request->input('start'), $request->input('end'), $request->input('search')),
-      'survey_history_' . Carbon::now()->format('Ymd_His') . '.xlsx'
+      new HistoryExport(
+        $this->normalizeDateInput($request->input('start')),
+        $this->normalizeDateInput($request->input('end')),
+        $request->input('search')
+      ),
+      'entri_laporan_genangan_history_' . Carbon::now()->format('Ymd_His') . '.xlsx'
     );
+  }
+
+  public function adminHistoryDetail(Survey $survey)
+  {
+    $this->ensureAdmin();
+
+    $survey->load('user', 'updatedBy');
+    $route = 'history';
+
+    return view('admin.history-detail', compact('survey', 'route'));
+  }
+
+  public function adminHistoryUpdate(Request $request, Survey $survey)
+  {
+    $this->ensureAdmin();
+
+    $request->validate([
+      'tanggal_kejadian' => 'required|date',
+      'tinggi' => 'required|numeric|min:0',
+      'latitude' => 'required|numeric|between:-90,90',
+      'longitude' => 'required|numeric|between:-180,180',
+      'foto' => 'nullable|file|mimetypes:image/jpeg,image/png,image/webp,image/heic,image/heif,image/heic-sequence,image/heif-sequence|max:10240',
+    ]);
+
+    $updateData = [
+      'tanggal_kejadian' => $request->tanggal_kejadian,
+      'tinggi' => $request->tinggi,
+      'latitude' => $request->latitude,
+      'longitude' => $request->longitude,
+      'updated_by' => Auth::id(),
+    ];
+
+    if ($request->hasFile('foto')) {
+      if ($survey->foto && $survey->foto !== '/') {
+        Storage::disk('public')->delete($survey->foto);
+      }
+
+      $updateData['foto'] = substr($request->foto->store('public/surveys'), 7);
+    }
+
+    $survey->update($updateData);
+
+    Alert::success('Sukses', 'Data laporan berhasil diperbarui');
+    return redirect()->route('admin.history.detail', $survey->id)->with('success', 'Data laporan berhasil diperbarui');
+  }
+
+  public function adminHistoryDelete(Survey $survey)
+  {
+    $this->ensureAdmin();
+
+    if ($survey->foto && $survey->foto !== '/') {
+      Storage::disk('public')->delete($survey->foto);
+    }
+
+    $survey->delete();
+
+    Alert::success('Sukses', 'Data laporan berhasil dihapus');
+    return redirect()->route('history')->with('success', 'Data laporan berhasil dihapus');
+  }
+
+  private function ensureAdmin(): void
+  {
+    if (!Auth::check() || !Auth::user()->is_admin) {
+      abort(403, 'Akses ditolak. Halaman ini hanya untuk admin.');
+    }
+  }
+
+  private function normalizeDateInput($value): ?string
+  {
+    if (!$value) {
+      return null;
+    }
+
+    $value = trim((string) $value);
+    if ($value === '') {
+      return null;
+    }
+
+    if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $value)) {
+      return Carbon::createFromFormat('d/m/Y', $value)->format('Y-m-d');
+    }
+
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+      return $value;
+    }
+
+    try {
+      return Carbon::parse($value)->format('Y-m-d');
+    } catch (\Throwable $th) {
+      return null;
+    }
   }
 }

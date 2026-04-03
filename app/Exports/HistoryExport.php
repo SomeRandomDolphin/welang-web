@@ -55,6 +55,7 @@ class HistoryExport implements FromQuery, WithColumnFormatting, WithMapping, Wit
             $survey->latitude . ', ' . $survey->longitude,
             $survey->tinggi,
             $survey->foto ? asset('storage/' . $survey->foto) : null,
+            $survey->updatedBy ? $survey->updatedBy->name : null,
         ];
     }
 
@@ -66,6 +67,7 @@ class HistoryExport implements FromQuery, WithColumnFormatting, WithMapping, Wit
             'Koordinat Lokasi',
             'Tinggi Genangan (cm)',
             'Foto',
+            'Diupdate Oleh',
         ];
     }
 
@@ -84,6 +86,7 @@ class HistoryExport implements FromQuery, WithColumnFormatting, WithMapping, Wit
             'C' => 25,
             'D' => 20,
             'E' => 100,
+            'F' => 20,
         ];
     }
 }

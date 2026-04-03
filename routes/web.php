@@ -33,5 +33,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/entry',        [SurveyController::class, 'entry'])->name('entry.store');
     Route::post('/saveCategory', [SurveyController::class, 'saveCategory'])->name('saveCategory');
     Route::get('/history',       [SurveyController::class, 'history'])->name('history');
+    Route::get('/admin/history/{survey}',    [SurveyController::class, 'adminHistoryDetail'])->name('admin.history.detail');
+    Route::put('/admin/history/{survey}',    [SurveyController::class, 'adminHistoryUpdate'])->name('admin.history.update');
+    Route::delete('/admin/history/{survey}', [SurveyController::class, 'adminHistoryDelete'])->name('admin.history.delete');
     Route::get('/export',        [SurveyController::class, 'export'])->name('export');
 });
