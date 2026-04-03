@@ -69,7 +69,7 @@
                     </div>
                     <div>
                         <p class="text-gray-500">Waktu Update</p>
-                        <p class="font-medium text-gray-900">{{ $survey->updated_at ? \Carbon\Carbon::parse($survey->updated_at)->format('d M Y H:i') : '-' }}</p>
+                        <p class="font-medium text-gray-900">{{ $survey->updatedBy ? \Carbon\Carbon::parse($survey->updated_at)->format('d M Y H:i') : '-' }}</p>
                     </div>
                 </div>
             </div>
