@@ -43,6 +43,12 @@
                         class="{{ $route === 'history' ? 'md:text-Active bg-Active text-white' : 'text-Inactive' }} md:text-[16px] md:font-normal block py-2 px-3 rounded md:bg-transparent md:p-0"
                         aria-current="page">Riwayat</a>
                 </li>
+                <li
+                    class="{{ $route === 'ffws' ? 'md:border-b-2 md:border-blue-600' : '' }}  md:flex md:h-full md:items-center">
+                    <a href="https://www.its.ac.id/tsipil/informasibanjir/ffws"
+                        class="{{ $route === 'ffws' ? 'md:text-Active bg-Active text-white' : 'text-Inactive' }} md:text-[16px] md:font-normal block py-2 px-3 rounded md:bg-transparent md:p-0"
+                        aria-current="page">FFWS</a>
+                </li>
             </ul>
             <div class="flex gap-4 items-center">
             @if (Auth::check())
