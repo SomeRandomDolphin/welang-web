@@ -27,10 +27,8 @@
     </style>
     <div class="hNav bg-[#F8FCFF] flex flex-col justify-center items-center py-12">
         <div class=" text-center my-4">
-            <h1 class="font-bold text-3xl">Entri Data Laporan Genangan</h1>
-            <p class="font-light my-2 text-base text-Inactive">Masukkan data-data laporan genangan yang telah dikumpulkan untuk
-                menampilkannya di
-                halaman beranda</p>
+            <h1 class="font-bold text-3xl">Entri Laporan Banjir/Genangan</h1>
+            <p class="font-light my-2 text-base text-Inactive">Masukkan data laporan banjir/genangan dari lokasi kejadian.</p>
         </div>
 
         <form id="searchForm" action="{{ route('entry') }}" method="POST" enctype="multipart/form-data"
@@ -70,11 +68,11 @@
                 <div class="flex flex-row items-start gap-3">
                     <div class="min-w-0 flex-1">
                         <div class="grid grid-cols-1 gap-2">
-                            <x-forms.input label="Tanggal Kejadian" classname="w-full my-0" placeholder="Tanggal Kejadian"
-                                name="tanggal_kejadian" type="datetime-local" value="" />
+                            <x-forms.input label="Tanggal dan Waktu Kejadian" classname="w-full my-0" placeholder="Tanggal dan Waktu Kejadian"
+                                name="tanggal_kejadian" type="datetime-local" value="{{ old('tanggal_kejadian') }}" />
 
-                            <x-forms.input label="Tinggi Genangan" classname="w-full my-0" placeholder="Tinggi Genangan Dalam cm"
-                                name="tinggi" type="number" value="" />
+                            <x-forms.input label="Tinggi Banjir/Genangan (cm)" classname="w-full my-0" placeholder="Contoh: 25"
+                                name="tinggi" type="number" value="{{ old('tinggi') }}" />
                         </div>
                     </div>
 
@@ -140,7 +138,7 @@
             </div>
 
             <div class="flex flex-col justify-center w-full">
-                <label for="foto" class="pFormActive">Foto</label>
+                <label for="foto" class="pFormActive">Unggah Foto (opsional)</label>
                 <label for="foto"
                     class="my-2 flex flex-col items-center justify-center w-full min-h-24 border border-gray-200 rounded-lg hover:bg-gray-100">
                     <img src="./camera.svg" alt="icon" class="max-h-128 h-fit rounded-lg" id="file-preview">
@@ -160,8 +158,16 @@
                 </div>
             </div>
 
+            <div class="flex flex-col w-full my-4">
+                <label for="catatan" class="pFormActive">Catatan (opsional)</label>
+                <textarea id="catatan" name="catatan" rows="4" maxlength="1000"
+                    class="mt-2 w-full rounded-lg border border-gray-200 p-3 font-light focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Contoh: Air mulai naik di akses jalan utama.">{{ old('catatan') }}</textarea>
+                <p class="mt-1 text-xs text-gray-500">Tambahkan informasi penting dari lokasi kejadian (maks. 1000 karakter).</p>
+            </div>
+
             <div class="flex flex-col items-start w-full my-2">
-                <label class="block mb-2 pFormActive">Lokasi</label>
+                <label class="block mb-2 pFormActive">Lokasi Kejadian</label>
 
                 {{-- "Gunakan Lokasi Saya" button at the top --}}
                 <button type="button" id="btn-get-location"
@@ -170,9 +176,10 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    <span id="location-btn-text">Gunakan Lokasi Saya</span>
+                    <span id="location-btn-text">Tentukan Lokasi Otomatis</span>
                 </button>
-                <p id="location-status" class="text-sm mt-1 text-gray-600 min-h-[1.25rem]" role="status" aria-live="polite"></p>
+                <p id="location-status" class="text-sm mt-1 text-gray-600 min-h-[1.25rem]" role="status" aria-live="polite">Tekan tombol untuk menunjuk lokasi secara otomatis.</p>
+                <p class="mt-1 text-xs text-gray-500">Koreksi lokasi dengan menekan titik yang tepat pada peta.</p>
 
                 {{-- Divider --}}
                 <div class="flex items-center w-full my-2 gap-x-2">
@@ -211,7 +218,7 @@
 
             <input type="text" class="hidden" id="latitude" name="latitude" required>
             <input type="text" class="hidden" id="longitude" name="longitude" required>
-            <x-button message="Unggah" type="submit" color="Primary" link=""
+            <x-button message="Kirim Laporan" type="submit" color="Primary" link=""
                 classname="w-full my-4 py-[10px] text-base" icons="" value="" />
         </form>
 

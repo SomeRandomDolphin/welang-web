@@ -23,6 +23,7 @@ class MobileSurveyController extends Controller
             'latitude'          => 'required|numeric|between:-90,90',
             'longitude'         => 'required|numeric|between:-180,180',
             'foto'              => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'catatan'           => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
@@ -39,6 +40,7 @@ class MobileSurveyController extends Controller
                 'tanggal_kejadian' => $request->tanggal_kejadian,
                 'latitude'         => $request->latitude,
                 'longitude'        => $request->longitude,
+                'catatan'          => $request->catatan,
                 'user_id'          => auth('api')->user()->id,
             ];
 
@@ -61,7 +63,7 @@ class MobileSurveyController extends Controller
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Berhasil melakukan entri laporan genangan',
+            'message' => 'Data laporan berhasil dikirim',
             'data'    => $survey,
         ], 201);
     }

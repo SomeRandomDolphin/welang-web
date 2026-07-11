@@ -21,6 +21,7 @@ class Survey extends Model
     'foto',
     'latitude',
     'longitude',
+    'catatan',
     'user_id',
     'updated_by',
   ];
