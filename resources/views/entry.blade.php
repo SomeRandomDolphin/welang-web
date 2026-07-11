@@ -137,33 +137,35 @@
                 </div>
             </div>
 
-            <div class="flex flex-col justify-center w-full">
-                <label for="foto" class="pFormActive">Unggah Foto (opsional)</label>
-                <label for="foto"
-                    class="my-2 flex flex-col items-center justify-center w-full min-h-24 border border-gray-200 rounded-lg hover:bg-gray-100">
-                    <img src="./camera.svg" alt="icon" class="max-h-128 h-fit rounded-lg" id="file-preview">
-                    <p id="file-preview-title"></p>
-                    <input id="foto" type="file" class="hidden" name="foto" accept="image/*,.heic,.heif,.webp"
-                        onchange="previewImage(event);" />
-                </label>
-                <div class="flex w-full gap-2">
-                    <button type="button" onclick="openCameraPicker()"
-                        class="flex-1 py-2 px-3 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors">
-                        Ambil dari Kamera
-                    </button>
-                    <button type="button" onclick="openGalleryPicker()"
-                        class="flex-1 py-2 px-3 rounded-lg bg-gray-600 text-white text-sm font-medium hover:bg-gray-700 active:bg-gray-800 transition-colors">
-                        Pilih dari Galeri
-                    </button>
+            <div class="my-4 grid w-full grid-cols-2 gap-3 items-start">
+                <div class="flex min-w-0 flex-col justify-center">
+                    <label for="foto" class="pFormActive">Foto (opsional)</label>
+                    <label for="foto"
+                        class="my-2 flex min-h-24 w-full flex-col items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100">
+                        <img src="./camera.svg" alt="icon" class="max-h-128 h-fit rounded-lg" id="file-preview">
+                        <p id="file-preview-title" class="max-w-full truncate px-2 text-xs"></p>
+                        <input id="foto" type="file" class="hidden" name="foto" accept="image/*,.heic,.heif,.webp"
+                            onchange="previewImage(event);" />
+                    </label>
+                    <div class="flex w-full gap-2">
+                        <button type="button" onclick="openCameraPicker()"
+                            class="flex-1 rounded-lg bg-blue-500 px-2 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-600 active:bg-blue-700 sm:text-sm">
+                            Kamera
+                        </button>
+                        <button type="button" onclick="openGalleryPicker()"
+                            class="flex-1 rounded-lg bg-gray-600 px-2 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-700 active:bg-gray-800 sm:text-sm">
+                            Galeri
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <div class="flex flex-col w-full my-4">
-                <label for="catatan" class="pFormActive">Catatan (opsional)</label>
-                <textarea id="catatan" name="catatan" rows="4" maxlength="1000"
-                    class="mt-2 w-full rounded-lg border border-gray-200 p-3 font-light focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="Contoh: Air mulai naik di akses jalan utama.">{{ old('catatan') }}</textarea>
-                <p class="mt-1 text-xs text-gray-500">Tambahkan informasi penting dari lokasi kejadian (maks. 1000 karakter).</p>
+                <div class="flex min-w-0 flex-col">
+                    <label for="catatan" class="pFormActive">Catatan (opsional)</label>
+                    <textarea id="catatan" name="catatan" rows="5" maxlength="1000"
+                        class="my-2 min-h-24 w-full resize-y rounded-lg border border-gray-200 p-3 font-light focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="Contoh: Air mulai naik di akses jalan utama.">{{ old('catatan') }}</textarea>
+                    <p class="text-xs text-gray-500">Maks. 1000 karakter.</p>
+                </div>
             </div>
 
             <div class="flex flex-col items-start w-full my-2">
