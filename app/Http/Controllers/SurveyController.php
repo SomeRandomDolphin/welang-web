@@ -213,6 +213,7 @@ class SurveyController extends Controller
       'latitude' => 'required|numeric|between:-90,90',
       'longitude' => 'required|numeric|between:-180,180',
       'foto' => 'nullable|file|mimetypes:image/jpeg,image/png,image/webp,image/heic,image/heif,image/heic-sequence,image/heif-sequence|max:10240',
+      'catatan' => 'nullable|string|max:1000',
     ]);
 
     $updateData = [
@@ -220,6 +221,7 @@ class SurveyController extends Controller
       'tinggi' => $request->tinggi,
       'latitude' => $request->latitude,
       'longitude' => $request->longitude,
+      'catatan' => $request->catatan,
       'updated_by' => Auth::id(),
     ];
 

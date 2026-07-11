@@ -95,6 +95,13 @@
                     </div>
                 </div>
 
+                <div class="flex flex-col w-full">
+                    <label for="catatan" class="block mb-2 pFormActive">Catatan</label>
+                    <textarea id="catatan" name="catatan" rows="4" maxlength="1000"
+                        placeholder="Tidak ada catatan"
+                        class="border border-gray-200 pFormActive font-light rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">{{ old('catatan', $survey->catatan) }}</textarea>
+                </div>
+
                 <div class="flex flex-col justify-center w-full">
                     <label for="foto" class="pFormActive">Foto Baru (opsional)</label>
                     <label for="foto"
