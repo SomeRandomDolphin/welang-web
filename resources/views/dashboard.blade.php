@@ -134,10 +134,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        const data = <?php echo json_encode($data); ?>;
-        const categories = <?php echo json_encode($categories); ?>;
+        const data = @json($data);
+        const categories = @json($categories);
         const assetBase = "{{ asset('') }}";
-        const iconUrls = Array.from({length: categories.length + 1}, (_, i) => assetBase + "icons/icon_" + (i + 1) + ".png");
 
         const lastDataPoint = data.length ? data[data.length - 1] : null;
         const defaultCenter = lastDataPoint ?
@@ -160,18 +159,42 @@
             console.error(errorMessage);
         }
 
-        function resolveIconUrl(item) {
+        function resolveCategory(item) {
             if (!categories.length) {
-                return iconUrls[0];
+                return null;
             }
 
-            for (let i = 0; i < categories.length; i++) {
-                if (item.tinggi >= categories[i].tinggi_minimal && item.tinggi < categories[i].tinggi_maksimal) {
-                    return iconUrls[i];
-                }
+            const height = Number(item.tinggi);
+            const orderedCategories = [...categories].sort(
+                (a, b) => Number(a.tinggi_minimal) - Number(b.tinggi_minimal)
+            );
+
+            const exactMatch = orderedCategories.find((category, index) => {
+                const isLastCategory = index === orderedCategories.length - 1;
+                return height >= Number(category.tinggi_minimal) &&
+                    (height < Number(category.tinggi_maksimal) ||
+                        (isLastCategory && height >= Number(category.tinggi_minimal)));
+            });
+
+            return exactMatch ?? orderedCategories[0];
+        }
+
+        function resolveAssetUrl(path) {
+            if (typeof path !== "string" || !path.trim()) {
+                return assetBase + "icons/icon_1.png";
             }
 
-            return iconUrls[iconUrls.length - 1];
+            if (/^(https?:)?\/\//i.test(path) || path.startsWith("data:")) {
+                return path;
+            }
+
+            return assetBase + path.replace(/^\/+/, "");
+        }
+
+        function escapeHtml(value) {
+            const element = document.createElement("div");
+            element.textContent = value == null ? "" : String(value);
+            return element.innerHTML;
         }
 
         function isValidPhotoPath(path) {
@@ -181,7 +204,11 @@
                 !/^\//.test(path);
         }
 
-        function buildPopupContent(item) {
+        function buildPopupContent(item, category) {
+            const height = escapeHtml(item.tinggi);
+            const categoryName = category ? escapeHtml(category.jenis) : "-";
+            const reporterName = escapeHtml(item.user?.name ?? "Tidak diketahui");
+            const notes = typeof item.catatan === "string" ? item.catatan.trim() : "";
             let content =
                 "<div style=\"padding: 4px; display: flex; flex-direction: row; align-items: flex-start; width: 100%; max-width: 280px; gap: 8px; box-sizing: border-box;\">";
 
@@ -194,11 +221,15 @@
             content +=
                 `<div style="display: flex; flex-direction: column; justify-content: center; min-width: 0; width: 100%; overflow-wrap: anywhere; word-break: break-word;">
                     <p style="margin: 0; color: #4d4d4d; font-size: 14px; font-weight: 400; line-height: 1.45; padding: 2px 0 8px;">
-                        Ketinggian banjir : <span style="color : #0FB92A;">${item.tinggi}</span>
+                        Ketinggian banjir : <span style="color : #0FB92A;">${height} cm</span>
+                    </p>
+                    <p style="margin: 0; color: #4d4d4d; font-size: 14px; font-weight: 400; line-height: 1.45; padding-bottom: 8px;">
+                        Kategori : <span style="color: #0FB92A;">${categoryName}</span>
                     </p>
                     <p style="margin: 0; color: #4d4d4d; font-size: 14px; font-weight: 400; line-height: 1.45; overflow-wrap: anywhere; word-break: break-word;">
-                        <span style="font-style: italic; font-weight: 300;">Dicatat Oleh</span> : ${item.user.name}
+                        <span style="font-style: italic; font-weight: 300;">Dicatat Oleh</span> : ${reporterName}
                     </p>
+                    ${notes ? `<p style="margin: 8px 0 0; color: #4d4d4d; font-size: 14px; font-weight: 400; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;"><span style="font-weight: 500;">Catatan:</span> ${escapeHtml(notes)}</p>` : ""}
                 </div>
             </div>`;
 
@@ -206,7 +237,8 @@
         }
 
         data.forEach((item) => {
-            const iconUrl = resolveIconUrl(item);
+            const category = resolveCategory(item);
+            const iconUrl = resolveAssetUrl(category?.ikon);
             const marker = L.marker([
                 parseFloat(item.latitude),
                 parseFloat(item.longitude),
@@ -219,7 +251,7 @@
                 }),
             }).addTo(map);
 
-            const popupContent = buildPopupContent(item);
+            const popupContent = buildPopupContent(item, category);
             marker.bindPopup(popupContent, {
                 maxWidth: 300,
                 minWidth: 220,
