@@ -245,11 +245,11 @@
             ], {
                 icon: L.icon({
                     iconUrl,
-                    // Source pin icons are approximately 347 × 600. Keep that
-                    // aspect ratio while making markers visible at dashboard scale.
-                    iconSize: [32, 55],
-                    iconAnchor: [16, 55],
-                    popupAnchor: [0, -55],
+                    // Match the balanced icon presentation used by the category
+                    // legend instead of the source PNG's tall canvas ratio.
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 40],
+                    popupAnchor: [0, -40],
                 }),
             }).addTo(map);
 
