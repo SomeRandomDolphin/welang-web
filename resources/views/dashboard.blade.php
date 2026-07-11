@@ -246,10 +246,10 @@
                 icon: L.icon({
                     iconUrl,
                     // Source pin icons are approximately 347 × 600. Keep that
-                    // aspect ratio when scaling them to map-marker height.
-                    iconSize: [16, 28],
-                    iconAnchor: [8, 28],
-                    popupAnchor: [0, -28],
+                    // aspect ratio while making markers visible at dashboard scale.
+                    iconSize: [32, 55],
+                    iconAnchor: [16, 55],
+                    popupAnchor: [0, -55],
                 }),
             }).addTo(map);
 
